@@ -1,0 +1,68 @@
+
+General canopy clustering algorithm
+
+T1 : distance to include points into canopies.
+T2 : distance limit when 'walking' the centroid of a new canopy.
+
+https://cwiki.apache.org/MAHOUT/canopy-clustering.html
+
+Build to fit clusters w MPI.
+
+Process:
+  Master reads the input points.
+  Each point is randomly distributed to a node.
+  
+  On the worker node the communicator thread will queue the incoming point.
+  It also has a set of processing threads.
+  
+  The worker first receives all its points from the master thread.
+  After all points have been send, the master communicates 'done'.
+  
+  Points may be assigned multiple canopies
+  
+  The worker keeps track of
+  	points
+  	canopies
+      assigned points.
+        	
+  Iterate while free points 
+    The worker picks a free point P.
+
+    The point is to be center of a temporary canopy Ct.
+    Iterate, generating temporary conopies Ct 
+      The canopy Ct is compared (in parallel) with all assigned and free points
+        to make a temporary list of points P1..i.
+      The temporary list of points are used to make a centroid for a new canopy Ct+1.
+	  If distance between centroids of Ct and Ct+1<T2,
+	    Register the new canopy Cn=Ct+1, and assign the list of points to it. 
+	  If the point P is not in the canopy, it is marked 'tested'.
+    End iteration
+  
+  End process point
+  
+  Canopy merging:
+
+  Workers send their local canopies to the master.
+  
+  The master broadcast each canopy Cw in turn.
+    After each canopy is send, each worker compares it to their
+      set of canopies Ci and send back an intersecting canopy list to the master.
+      they delete the intersecting canopies.
+    The master aggregates the data and merge the canopies.
+    The master sends out the new canopy to a random worker.
+  End merge canopies
+  
+  Output:
+  
+  Master output each canopy, number of points, and points?
+  
+Idea:
+  To number canopies uniquely, number of total points is known at 'done' signal. This could
+  be send, and used to calculate a number worker#*totalpoints, at which to number all canopies.
+  (there are never more canopies than points for sure)  
+
+Performance notes:
+  Bjørn reports that taking 100 genes and comparing it in parallel to all genes, is a 
+  speedup compared to taking 1 gene  and comparing it in parallel to all genes.
+  Memory locality?
+  
