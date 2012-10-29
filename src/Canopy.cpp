@@ -5,6 +5,6 @@
  *      Author: Hans-Henrik Stærfeldt
  */
 
-#include "Canopy.h"
+#include <Canopy.hpp>
 
 

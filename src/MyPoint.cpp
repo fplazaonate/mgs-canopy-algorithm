@@ -5,7 +5,7 @@
  *      Author: l-hhs
  */
 
-#include "MyPoint.h"
+#include <MyPoint.hpp>
 #include <math.h>
 #include <string>
 using namespace std;

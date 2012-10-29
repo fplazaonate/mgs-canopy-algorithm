@@ -5,7 +5,7 @@
  *      Author: l-hhs
  */
 
-#include "ExpPoint.h"
+#include <ExpPoint.hpp>
 #include <math.h>
 #include <string>
 using namespace std;

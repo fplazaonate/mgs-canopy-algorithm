@@ -7,9 +7,9 @@
 //============================================================================
 
 #include <iostream>
-#include "MyPoint.h"
-#include "Canopy.h"
-#include "Clustering.h"
+#include <MyPoint.hpp>
+#include <Canopy.hpp>
+#include <Clustering.hpp>
 using namespace std;
 
 int main(int argc, char *argv[]) {

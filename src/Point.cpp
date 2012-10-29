@@ -5,7 +5,7 @@
  *      Author: Hans-Henrik Stærfeldt
  */
 
-#include "Point.h"
+#include <Point.hpp>
 #include <string>
 using namespace std;
 
