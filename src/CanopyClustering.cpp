@@ -10,30 +10,36 @@
 #include <MyPoint.hpp>
 #include <Canopy.hpp>
 #include <Clustering.hpp>
+
+#include <vector>
+
 using namespace std;
 
 int main(int argc, char *argv[]) {
 
-	// Read data
-	list<ExpPoint> points;
+    vector<MyPoint> points;
+	
+    points = read_point_file("./points", 1);
 
-	// TODO: may need work :)
-	cin >> points;
+    //Let the clustering begin!
+    {
+        //Prepare basic structures
+        boost::unordered_set marked_points;
+        boost::unordered_set unmarked_points(points);
 
-	// processing
-	double t1 = 1.0;
-	double t2 = 1.0;
-	double t3 = 1.0;
-	int citer = 1;
-	int minsize = 0;
+        while(unmarked_points.size() > 0){
+            point = take_point_by_random(unmarked_points);
 
-	Clustering<ExpPoint> *reducer = new Clustering<ExpPoint>(t1,t2,t3,citer,minsize);
+            Canopy canopy = Canopy::find_canopy_until(double delta, *unmarked_points, *marked_points);
 
-	// result;
-	list<Canopy<ExpPoint>> result = reducer->cluster(points);
 
-	// TODO: may need work :)
-	cout << result;
+
+        }
+
+        print(Canopies);
+    }
+
+
 
 	return 0;
 }
