@@ -17,7 +17,7 @@ COMP = $(GNU_COMP)
 COMP_OPENMP = $(GNU_OPENMP)
 endif
 
-ADDITIONAL_OPTS = #-O3#-Wall 
+ADDITIONAL_OPTS = -g -p #-03 #-O3#-Wall 
 
 ALGLIB_PATH = ../lib/alglib/src/
 
@@ -33,7 +33,7 @@ ADDITIONAL_FILES_TO_BE_DELETED =
 
 ### EXECUTABLE
 
-$(EXECUTABLE_NAME): main.o Point.o CanopyClustering.o alglib_ap.o alglib_statistics.o alglib_internal.o alglib_specialfunctions.o alglib_misc.o alglib_linalg.o
+$(EXECUTABLE_NAME): main.o Point.o CanopyClustering.o Log.o alglib_ap.o alglib_statistics.o alglib_internal.o alglib_specialfunctions.o alglib_misc.o alglib_linalg.o 
 	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $(LIBS) $^
 
 main.o:	main.cpp 
@@ -43,6 +43,9 @@ Point.o: Point.cpp
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 CanopyClustering.o: CanopyClustering.cpp 
+	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
+
+Log.o: Log.cpp 
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 alglib_ap.o: $(ALGLIB_PATH)ap.cpp

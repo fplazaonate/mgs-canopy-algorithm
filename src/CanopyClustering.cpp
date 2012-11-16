@@ -1,23 +1,30 @@
 #include <algorithm>
 
+
 #include <boost/foreach.hpp>
 
 #include <CanopyClustering.hpp>
+#include <Log.hpp>
 
-Canopy CanopyClusteringAlg::create_canopy(const Point& center, boost::unordered_set<Point>& marked_points, const std::vector<Point>& points){
+Canopy CanopyClusteringAlg::create_canopy(const Point& origin, boost::unordered_set<Point>& marked_points, const std::vector<Point>& points, const double min_correlation){
 
     Canopy c;
 
     //TODO: dangerous?
-    c.center = center; 
+    c.origin = origin; 
 
     BOOST_FOREACH(const Point& potential_neighbour, points){
-        if(marked_points.find(potential_neighbour) == marked_points.end()){
-            if(Point::get_distance_between_points(center, potential_neighbour) > 0.5){
+        //if(marked_points.find(potential_neighbour) == marked_points.end()){
+            if(Point::get_distance_between_points(origin, potential_neighbour) > min_correlation){
                 c.neighbours.push_back(potential_neighbour);
             }
-        }
+        //}
     }
+
+    if(!c.neighbours.size())
+        c.center = origin;
+    else
+        c.center = Point::get_centroid_of_points(c.neighbours);
 
     return c;
 
@@ -25,8 +32,11 @@ Canopy CanopyClusteringAlg::create_canopy(const Point& center, boost::unordered_
 
 std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vector<Point>& points){
 
-    double canopy_radius = 0.5;
-    double canopy_merge_distance_threshold = 0.5;
+    _log(logDEBUG1) << "############Creating Canopies############";
+
+    double min_canopy_correlation = 0.9;
+    double canopy_merge_distance_threshold = 0.97;
+    double canopy_iteration_min_correlation = 0.1;
 
     //TODO: ensure it is actually random
     std::random_shuffle(points.begin(), points.end());
@@ -36,41 +46,51 @@ std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vect
 
     std::vector<Canopy> canopy_vector;
 
-
+    //
     //Create canopies
-    BOOST_FOREACH(const Point& p, points){
+    //
+    BOOST_FOREACH(const Point& origin, points){
         
-        if(marked_points.find(p) == marked_points.end()){
-            std::cout << p.id << std::endl;
+        _log(logINFO) << "Unmarked points count: " << points.size() - marked_points.size();
 
-            Canopy c1, c2;
+        if(marked_points.find(origin) != marked_points.end())
+            continue;
 
-            c1 = create_canopy(p, marked_points, points);
-            c2.center = Point::get_centroid_of_points(c1.neighbours);
-            c2 = create_canopy(c2.center, marked_points, points);
+        _log(logDEBUG2) << "Current canopy origin: " << origin.id;
 
-            double distance = Point::get_distance_between_points(c1.center, c2.center);
-            std::cout << distance << std::endl;
-            //std::cout << c1.center << std::endl;
-            //std::cout << c2.center << std::endl;
+        Canopy c1, c2;
+
+        c1 = create_canopy(origin, marked_points, points, min_canopy_correlation );
+        if(c1.neighbours.size())
+            c2.origin = Point::get_centroid_of_points(c1.neighbours);
+        else
+            c2.origin = c1.origin;
+
+        c2 = create_canopy(c2.origin, marked_points, points, min_canopy_correlation);
+
+        double correlation = Point::get_distance_between_points(c1.center, c2.center);
+
+        _log(logDEBUG3) << c1;
+        _log(logDEBUG3) << c2;
+        _log(logDEBUG3) << "correlation: " << correlation;
 
 
-            while(canopy_radius < 0.5){
-                c1=c2;
-                c2=create_canopy(c1.center, marked_points, points);
-                distance = Point::get_distance_between_points(c1.center, c2.center); 
-                std::cout << distance << std::endl;
-                //std::cout << c1.center << std::endl;
-                //std::cout << c2.center << std::endl;
-            }
+        while(correlation < canopy_iteration_min_correlation){
+            c1=c2;
 
-            canopy_vector.push_back(c2);
-            
-            BOOST_FOREACH(Point& n, c2.neighbours){
-                marked_points.insert(n);
-            }
-
+            c2=create_canopy(c1.center, marked_points, points, min_canopy_correlation);
+            correlation = Point::get_distance_between_points(c1.center, c2.center); 
+            _log(logDEBUG3) << c1;
+            _log(logDEBUG3) << c2;
+            _log(logDEBUG3) << "correlation: " << correlation;
         }
+
+        canopy_vector.push_back(c2);
+
+        BOOST_FOREACH(Point& n, c2.neighbours){
+            marked_points.insert(n);
+        }
+
     }
 
     std::vector<Canopy> merged_canopy_vector;
@@ -83,13 +103,14 @@ std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vect
     //3. If any of the remaining canopies is closer to c than threshold
     //4. We 
     
+    _log(logDEBUG1) << "############Merging canopies############";
     while(canopy_vector.size()){
         bool any_canopy_merged = false;
 
         std::vector<int> canopies_to_be_merged_index_vector;
         std::vector<Canopy> canopies_to_merge;
 
-        //This is the canopy we will look for partners
+        //This is the canopy we will look for partners for
         Canopy c = canopy_vector[0];
 
         //Get indexes of those canopies that are nearby
@@ -97,11 +118,16 @@ std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vect
 
             Canopy c2 = canopy_vector[i]; 
 
-            if(Point::get_distance_between_points(c.center, c2.center) < canopy_merge_distance_threshold){
+            _log(logDEBUG3) << "Calculating distances";
+            _log(logDEBUG3) << c.center;
+            _log(logDEBUG3) << c2.center;
 
+            double correlation = Point::get_distance_between_points(c.center, c2.center);
+
+            _log(logDEBUG3) << "Correlation: " << correlation;
+
+            if(correlation > canopy_merge_distance_threshold)
                 canopies_to_be_merged_index_vector.push_back(i);
-
-            }
 
         }
 
@@ -153,7 +179,24 @@ std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vect
             canopy_vector.erase(canopy_vector.begin());
         }
     }
-
     return merged_canopy_vector;
+
+    //return canopy_vector;
+
+}
+
+std::ostream& operator<<(std::ostream& ost, const Canopy& c)
+{
+    ost << ">>>>>>>>>>Canopy>>>>>>>>" << std::endl;
+    ost << "Origin:" << std::endl;
+    ost << c.origin;
+    ost << "Center:" << std::endl;
+    ost << c.center;
+    ost << "Neighbours:" << std::endl;
+    BOOST_FOREACH(const Point& p, c.neighbours)
+        ost << p.id << "\t";
+    ost << std::endl;
+    ost << ">>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
+
 
 }

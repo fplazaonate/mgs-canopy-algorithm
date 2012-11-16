@@ -11,6 +11,7 @@
 
 #include <Point.hpp>
 #include <CanopyClustering.hpp>
+#include <Log.hpp>
 
 using namespace std;
 using namespace boost::iostreams;
@@ -30,10 +31,10 @@ void verify_input_correctness(const options_description& command_line_desc, cons
     }
 }
 
-
-
 int main(int argc, const char* argv[])
 {
+    //log_level = logDEBUG4;
+    log_level = logINFO;
     //
     //Parse input options
     //
@@ -54,6 +55,7 @@ int main(int argc, const char* argv[])
     //Verify input correctness
     verify_input_correctness(command_line_desc, command_line_variable_map);
 
+
     //
     //Parse point description file
     //
@@ -65,10 +67,19 @@ int main(int argc, const char* argv[])
     string line;
     getline(point_input_file, line);//Ignore first line
     while(getline(point_input_file, line)){
-        points.push_back(Point(line));
+        points.push_back(Point(line.c_str()));
     }
 
     Point::verify_proper_point_input_or_die(points);
+
+    _log(logINFO) << "Finished reading point input file";
+    _log(logINFO) << "Number of points read: " << points.size();
+
+    //cout << points[0] << endl;
+    //cout << points[1] << endl;
+    //cout << points[2] << endl;
+    //cout << points[3] << endl;
+
     
     //
     //Run Canopy Clustering
@@ -76,14 +87,17 @@ int main(int argc, const char* argv[])
     std::vector<Canopy> canopies;
     canopies = CanopyClusteringAlg::single_core_run_clustering_on(points);
 
-    int i = 0;
+    //int i = 0;
+    cout << "####################Results####################" << endl;
+    cout << "####################Results####################" << endl;
     cout << "####################Results####################" << endl;
     BOOST_FOREACH(const Canopy& c, canopies){
-        cout << "Canopy: " << ++i << "\t\t";
-        BOOST_FOREACH(const Point& p, c.neighbours){
-            cout << p.id << "\t";
-        }
-        cout << endl;
+        //cout << "Canopy: " << ++i << "\t\t";
+        //BOOST_FOREACH(const Point& p, c.neighbours){
+        //    cout << p.id << "\t";
+        //}
+        //cout << endl;
+        cout << c;
     }
 
 
