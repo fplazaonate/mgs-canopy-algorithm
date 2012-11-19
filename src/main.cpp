@@ -59,7 +59,7 @@ int main(int argc, const char* argv[])
     //
     //Parse point description file
     //
-    vector<Point> points;
+    vector<Point*> points;
     
     stream<mapped_file_source> point_input_file;
     point_input_file.open(command_line_variable_map["point_input_file"].as<string>());
@@ -67,7 +67,7 @@ int main(int argc, const char* argv[])
     string line;
     getline(point_input_file, line);//Ignore first line
     while(getline(point_input_file, line)){
-        points.push_back(Point(line.c_str()));
+        points.push_back(new Point(line.c_str()));
     }
 
     Point::verify_proper_point_input_or_die(points);
@@ -99,6 +99,9 @@ int main(int argc, const char* argv[])
         //cout << endl;
         cout << c;
     }
+
+    BOOST_FOREACH(Point* point, points)
+        delete point;
 
 
 

@@ -6,14 +6,14 @@
 #include <CanopyClustering.hpp>
 #include <Log.hpp>
 
-Canopy CanopyClusteringAlg::create_canopy(const Point& origin, boost::unordered_set<Point>& marked_points, const std::vector<Point>& points, const double min_correlation){
+Canopy CanopyClusteringAlg::create_canopy(Point* origin, boost::unordered_set<Point*>& marked_points, std::vector<Point*>& points, double min_correlation){
 
     Canopy c;
 
     //TODO: dangerous?
     c.origin = origin; 
 
-    BOOST_FOREACH(const Point& potential_neighbour, points){
+    BOOST_FOREACH(Point* potential_neighbour, points){
         //if(marked_points.find(potential_neighbour) == marked_points.end()){
             if(Point::get_distance_between_points(origin, potential_neighbour) > min_correlation){
                 c.neighbours.push_back(potential_neighbour);
@@ -30,7 +30,7 @@ Canopy CanopyClusteringAlg::create_canopy(const Point& origin, boost::unordered_
 
 }
 
-std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vector<Point>& points){
+std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vector<Point*>& points){
 
     _log(logDEBUG1) << "############Creating Canopies############";
 
@@ -42,21 +42,21 @@ std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vect
     std::random_shuffle(points.begin(), points.end());
 
     //TODO: this will be super slow!
-    boost::unordered_set<Point, boost::hash<Point> > marked_points;
+    boost::unordered_set<Point*> marked_points;
 
     std::vector<Canopy> canopy_vector;
 
     //
     //Create canopies
     //
-    BOOST_FOREACH(const Point& origin, points){
+    BOOST_FOREACH(Point* origin, points){
         
         _log(logINFO) << "Unmarked points count: " << points.size() - marked_points.size();
 
         if(marked_points.find(origin) != marked_points.end())
             continue;
 
-        _log(logDEBUG2) << "Current canopy origin: " << origin.id;
+        _log(logDEBUG2) << "Current canopy origin: " << origin->id;
 
         Canopy c1, c2;
 
@@ -87,7 +87,7 @@ std::vector<Canopy> CanopyClusteringAlg::single_core_run_clustering_on(std::vect
 
         canopy_vector.push_back(c2);
 
-        BOOST_FOREACH(Point& n, c2.neighbours){
+        BOOST_FOREACH(Point* n, c2.neighbours){
             marked_points.insert(n);
         }
 
@@ -189,12 +189,12 @@ std::ostream& operator<<(std::ostream& ost, const Canopy& c)
 {
     ost << ">>>>>>>>>>Canopy>>>>>>>>" << std::endl;
     ost << "Origin:" << std::endl;
-    ost << c.origin;
+    ost << *c.origin;
     ost << "Center:" << std::endl;
-    ost << c.center;
+    ost << *c.center;
     ost << "Neighbours:" << std::endl;
-    BOOST_FOREACH(const Point& p, c.neighbours)
-        ost << p.id << "\t";
+    BOOST_FOREACH(const Point* p, c.neighbours)
+        ost << p->id << "\t";
     ost << std::endl;
     ost << ">>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
 
