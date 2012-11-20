@@ -3,6 +3,11 @@
 
 #include <Canopy.hpp>
 
+Canopy::Canopy(){
+    center = NULL;
+    origin = NULL;
+}
+
 Canopy::Canopy(Point* origin, Point* center, std::vector<Point*>& neighbours): origin(origin), center(center), neighbours(neighbours){}
 
 std::ostream& operator<<(std::ostream& ost, const Canopy& c)

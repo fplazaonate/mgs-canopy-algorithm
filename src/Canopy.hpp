@@ -9,6 +9,7 @@ using namespace std;
 
 class Canopy {
     public:
+        Canopy();
         Canopy(Point* origin, Point* center, std::vector<Point*>& neighbours);
         
 

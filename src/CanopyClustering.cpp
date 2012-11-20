@@ -160,14 +160,18 @@ std::vector<Canopy*> CanopyClusteringAlg::single_core_run_clustering_on(std::vec
         if( canopies_to_merge.size() ){
             any_canopy_merged = true;
 
-            Canopy* merged_canopy;
+            Canopy* merged_canopy= new Canopy();
 
-            BOOST_FOREACH(Canopy* canopy, canopies_to_merge)
+            BOOST_FOREACH(Canopy* canopy, canopies_to_merge){
                merged_canopy->neighbours.insert(merged_canopy->neighbours.begin(), canopy->neighbours.begin(), canopy->neighbours.end()); 
+               delete canopy;
+            }
 
             merged_canopy->center = Point::get_centroid_of_points( merged_canopy->neighbours );
 
             canopy_vector.insert(canopy_vector.begin(), merged_canopy);
+
+            //delete those canopies which are merged into one
         }
 
         //If no canopies were merged remove the canopy we compared against the others
