@@ -60,12 +60,10 @@ std::vector<Canopy*> CanopyClusteringAlg::single_core_run_clustering_on(std::vec
         Canopy *c2;
 
         c1 = create_canopy(origin, marked_points, points, min_canopy_correlation );
-        if(c1->neighbours.size())
-            c2->origin = Point::get_centroid_of_points(c1->neighbours);
-        else
-            c2->origin = c1->origin;
 
-        c2 = create_canopy(c2->origin, marked_points, points, min_canopy_correlation);
+        Point* c2_origin = c1->neighbours.size() > 0 ? Point::get_centroid_of_points(c1->neighbours) : c2->origin = c1->origin;
+
+        c2 = create_canopy(c2_origin, marked_points, points, min_canopy_correlation);
 
         double correlation = Point::get_distance_between_points(c1->center, c2->center);
 
