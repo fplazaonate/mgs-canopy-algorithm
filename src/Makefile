@@ -33,8 +33,7 @@ ADDITIONAL_FILES_TO_BE_DELETED =
 
 ### EXECUTABLE
 
-$(EXECUTABLE_NAME): main.o Point.o CanopyClustering.o Log.o 
-#alglib_ap.o alglib_statistics.o alglib_internal.o alglib_specialfunctions.o alglib_misc.o alglib_linalg.o 
+$(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Log.o 
 	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $(LIBS) $^
 
 main.o:	main.cpp 
@@ -43,29 +42,15 @@ main.o:	main.cpp
 Point.o: Point.cpp 
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
+Canopy.o: Canopy.cpp 
+	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
+
 CanopyClustering.o: CanopyClustering.cpp 
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 Log.o: Log.cpp 
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
-#alglib_ap.o: $(ALGLIB_PATH)ap.cpp
-#	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-#
-#alglib_statistics.o: $(ALGLIB_PATH)statistics.cpp
-#	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-#
-#alglib_specialfunctions.o: $(ALGLIB_PATH)specialfunctions.cpp
-#	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-#
-#alglib_internal.o: $(ALGLIB_PATH)alglibinternal.cpp
-#	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-#
-#alglib_misc.o: $(ALGLIB_PATH)alglibmisc.cpp
-#	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-#
-#alglib_linalg.o: $(ALGLIB_PATH)linalg.cpp
-#	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 #### Targets
 
 all: $(EXECUTABLE_NAME) 

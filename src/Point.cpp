@@ -10,17 +10,8 @@
 #include <boost/functional/hash.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <statistics.h>
-
 #include <Point.hpp>
 #include <Log.hpp>
-
-Point::Point(const Point& p){
-    num_data_samples = p.num_data_samples;
-    for(int i= 0; i < num_data_samples; i++){
-        sample_data[i] = p.sample_data[i];
-    }
-}
 
 Point::Point(std::string point_file_line){
 
@@ -43,6 +34,17 @@ Point::Point(std::string point_file_line){
         _log(logDEBUG3) << "\"" << sample_data_vector[i] << "\"" << "\t" << atof(sample_data_vector[i].c_str()) << "\t" << sample_data[i-1];
     }
 }
+
+Point::Point(const Point& p){
+    id = p.id;
+    num_data_samples = p.num_data_samples;
+
+    sample_data = new double[num_data_samples];
+    for(int i=0; i < num_data_samples;i++){
+        sample_data[i] = p.sample_data[i];
+    }
+}
+
 
 Point::~Point(){
     if(sample_data)
@@ -82,20 +84,19 @@ double Point::get_distance_between_points(const Point* p1, const Point* p2){
 
     int len = p1->num_data_samples;
     double dist = morten_pearsoncorr(len, p1->sample_data, p2->sample_data);
-    //double dist = pearsoncorr2(p1.sample_data, p2.sample_data);
 
-    //if(log_level >= logDEBUG3){
-    //    _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
-    //    _log(logDEBUG3) << "point: " << p1.id;
-    //    for(int i=0; i < p1.num_data_samples; i++){
-    //        _log(logDEBUG3) << "\t"<<p1.sample_data[i];
-    //    }
-    //    _log(logDEBUG3) << "point: " << p2.id;
-    //    for(int i=0; i < p2.num_data_samples; i++){
-    //        _log(logDEBUG3) << "\t"<<p2.sample_data[i];
-    //    }
-    //    _log(logDEBUG3) << "distance: " << dist;
-    //}
+    if(log_level >= logDEBUG3){
+        _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
+        _log(logDEBUG3) << "point: " << p1->id;
+        for(int i=0; i < p1->num_data_samples; i++){
+            _log(logDEBUG3) << "\t"<<p1->sample_data[i];
+        }
+        _log(logDEBUG3) << "point: " << p2->id;
+        for(int i=0; i < p2->num_data_samples; i++){
+            _log(logDEBUG3) << "\t"<<p2->sample_data[i];
+        }
+        _log(logDEBUG3) << "distance: " << dist;
+    }
 
     return dist; 
 }
@@ -103,11 +104,6 @@ double Point::get_distance_between_points(const Point* p1, const Point* p2){
 void Point::verify_proper_point_input_or_die(const std::vector<Point*>& points){
     
     //Verify all points have the same number of samples
-    //int num_samples = points[0].sample_data.length();
-    //BOOST_FOREACH(const Point point, points){
-    //    _log(logDEBUG) <<  point;
-    //    assert(point.sample_data.length() == num_samples);
-    //}
     int num_samples = points[0]->num_data_samples;
     BOOST_FOREACH(const Point* point, points){
         _log(logDEBUG) <<  *point;
@@ -126,17 +122,12 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
 
     //TODO: median should be estimated using boost/accumulators/statistics/median.hpp
 
-    Point* centroid(points[0]);
+    Point* centroid = new Point(*points[0]);
     
     assert(points.size());
 
     //std::cout << points[0] << std::endl;
     
-    //int num_samples = points[0].sample_data.length();
-
-    //centroid.sample_data.setlength(num_samples);
-
-    //for(int sample = 0; sample < num_samples; sample++){
     int num_samples = points[0]->num_data_samples;
 
     for(int sample = 0; sample < num_samples; sample++){
@@ -178,7 +169,6 @@ std::ostream& operator<<(std::ostream& ost, const Point& p)
 {
         ost << "============================" << std::endl;
         ost << "Point: " << p.id << std::endl;
-        //for(int i=0; i < p.sample_data.length(); i++){
         for(int i=0; i < p.num_data_samples; i++){
             ost << p.sample_data[i] << "\t" ;
         }

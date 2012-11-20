@@ -7,21 +7,16 @@
 #include <iostream>
 #include <math.h>
 
-#include <ap.h>
-
 using namespace std;
 class Point {
     private:
-        //alglib::real_1d_array sample_data;
         double* sample_data;
         int num_data_samples;
 
 
     public:
-        Point();
         Point(const Point& p);
         Point(std::string point_file_line);
-        //Point(const char* point_file_line);
         ~Point();
         
         bool operator==(const Point& other) const;

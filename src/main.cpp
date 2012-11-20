@@ -84,21 +84,24 @@ int main(int argc, const char* argv[])
     //
     //Run Canopy Clustering
     //
-    std::vector<Canopy> canopies;
+    std::vector<Canopy*> canopies;
     canopies = CanopyClusteringAlg::single_core_run_clustering_on(points);
 
     //int i = 0;
     cout << "####################Results####################" << endl;
     cout << "####################Results####################" << endl;
     cout << "####################Results####################" << endl;
-    BOOST_FOREACH(const Canopy& c, canopies){
+    BOOST_FOREACH(Canopy* c, canopies){
         //cout << "Canopy: " << ++i << "\t\t";
         //BOOST_FOREACH(const Point& p, c.neighbours){
         //    cout << p.id << "\t";
         //}
         //cout << endl;
-        cout << c;
+        cout << *c;
     }
+
+    BOOST_FOREACH(Canopy* c, canopies)
+        delete c;
 
     BOOST_FOREACH(Point* point, points)
         delete point;
