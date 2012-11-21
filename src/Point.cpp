@@ -30,7 +30,6 @@ Point::Point(std::string point_file_line){
 
     for(int i = 1; i < sample_data_vector.size(); i++){
         sample_data[i-1] = (double)atof(sample_data_vector[i].c_str());
-        //sample_data.push_back((double)atof(sample_data_vector[i].c_str()));
         _log(logDEBUG3) << "\"" << sample_data_vector[i] << "\"" << "\t" << atof(sample_data_vector[i].c_str()) << "\t" << sample_data[i-1];
     }
 }
@@ -126,8 +125,6 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
     
     assert(points.size());
 
-    //std::cout << points[0] << std::endl;
-    
     int num_samples = points[0]->num_data_samples;
 
     for(int sample = 0; sample < num_samples; sample++){

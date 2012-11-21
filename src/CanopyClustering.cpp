@@ -1,6 +1,5 @@
 #include <algorithm>
 
-
 #include <boost/foreach.hpp>
 
 #include <CanopyClustering.hpp>
@@ -164,6 +163,7 @@ std::vector<Canopy*> CanopyClusteringAlg::single_core_run_clustering_on(std::vec
 
             BOOST_FOREACH(Canopy* canopy, canopies_to_merge){
                merged_canopy->neighbours.insert(merged_canopy->neighbours.begin(), canopy->neighbours.begin(), canopy->neighbours.end()); 
+                //delete those canopies which are merged into one
                delete canopy;
             }
 
@@ -171,7 +171,6 @@ std::vector<Canopy*> CanopyClusteringAlg::single_core_run_clustering_on(std::vec
 
             canopy_vector.insert(canopy_vector.begin(), merged_canopy);
 
-            //delete those canopies which are merged into one
         }
 
         //If no canopies were merged remove the canopy we compared against the others
@@ -181,7 +180,5 @@ std::vector<Canopy*> CanopyClusteringAlg::single_core_run_clustering_on(std::vec
         }
     }
     return merged_canopy_vector;
-
-    //return canopy_vector;
 
 }

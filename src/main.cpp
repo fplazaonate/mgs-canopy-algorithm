@@ -74,12 +74,6 @@ int main(int argc, const char* argv[])
 
     _log(logINFO) << "Finished reading point input file";
     _log(logINFO) << "Number of points read: " << points.size();
-
-    //cout << points[0] << endl;
-    //cout << points[1] << endl;
-    //cout << points[2] << endl;
-    //cout << points[3] << endl;
-
     
     //
     //Run Canopy Clustering
@@ -87,16 +81,10 @@ int main(int argc, const char* argv[])
     std::vector<Canopy*> canopies;
     canopies = CanopyClusteringAlg::single_core_run_clustering_on(points);
 
-    //int i = 0;
     cout << "####################Results####################" << endl;
     cout << "####################Results####################" << endl;
     cout << "####################Results####################" << endl;
     BOOST_FOREACH(Canopy* c, canopies){
-        //cout << "Canopy: " << ++i << "\t\t";
-        //BOOST_FOREACH(const Point& p, c.neighbours){
-        //    cout << p.id << "\t";
-        //}
-        //cout << endl;
         cout << *c;
     }
 
