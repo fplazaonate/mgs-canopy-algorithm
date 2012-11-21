@@ -33,7 +33,7 @@ ADDITIONAL_FILES_TO_BE_DELETED =
 
 ### EXECUTABLE
 
-$(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Log.o 
+$(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o 
 	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $(LIBS) $^
 
 main.o:	main.cpp 
@@ -46,6 +46,9 @@ Canopy.o: Canopy.cpp
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 CanopyClustering.o: CanopyClustering.cpp 
+	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
+
+Stats.o: Stats.cpp 
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 Log.o: Log.cpp 

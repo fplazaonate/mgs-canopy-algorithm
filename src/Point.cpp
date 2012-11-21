@@ -12,6 +12,8 @@
 
 #include <Point.hpp>
 #include <Log.hpp>
+#include <Stats.hpp>
+
 
 Point::Point(std::string point_file_line){
 
@@ -32,6 +34,9 @@ Point::Point(std::string point_file_line){
         sample_data[i-1] = (double)atof(sample_data_vector[i].c_str());
         _log(logDEBUG3) << "\"" << sample_data_vector[i] << "\"" << "\t" << atof(sample_data_vector[i].c_str()) << "\t" << sample_data[i-1];
     }
+
+    sample_data_pearson_precomputed = precompute_pearson_data(sample_data);
+
 }
 
 Point::Point(const Point& p){
@@ -42,62 +47,17 @@ Point::Point(const Point& p){
     for(int i=0; i < num_data_samples;i++){
         sample_data[i] = p.sample_data[i];
     }
+
+    sample_data_pearson_precomputed = precompute_pearson_data(sample_data);
 }
 
 
 Point::~Point(){
     if(sample_data)
         delete sample_data;
-}
 
-double morten_pearsoncorr(int n, const double* v1, const double* v2){
-	int	i;
-	double x0=0,y0=0;
-	double t, nx, ny;
-	double c;
-
-    for(int i = 0; i < n; i++){
-        x0+=v1[i];
-        y0+=v2[i];
-    }
-    x0/=n;
-    y0/=n;
-
-	t = nx = ny = 0.0;
-
-	for ( i=0;i<n;i++ ) {
-		t += ( v1[i] - x0 ) * ( v2[i] - y0 );
-		nx += ( v1[i] - x0 ) * ( v1[i] - x0 );
-		ny += ( v2[i] - y0 ) * ( v2[i] - y0 );
-	}
-
-	if ( nx * ny == 0.0 )
-		c = 0.0;
-	else
-		c = t/sqrt(nx*ny);
-
-	return( c );
-}
-
-double Point::get_distance_between_points(const Point* p1, const Point* p2){
-
-    int len = p1->num_data_samples;
-    double dist = morten_pearsoncorr(len, p1->sample_data, p2->sample_data);
-
-    if(log_level >= logDEBUG3){
-        _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
-        _log(logDEBUG3) << "point: " << p1->id;
-        for(int i=0; i < p1->num_data_samples; i++){
-            _log(logDEBUG3) << "\t"<<p1->sample_data[i];
-        }
-        _log(logDEBUG3) << "point: " << p2->id;
-        for(int i=0; i < p2->num_data_samples; i++){
-            _log(logDEBUG3) << "\t"<<p2->sample_data[i];
-        }
-        _log(logDEBUG3) << "distance: " << dist;
-    }
-
-    return dist; 
+    if(sample_data_pearson_precomputed)
+        delete sample_data_pearson_precomputed;
 }
 
 void Point::verify_proper_point_input_or_die(const std::vector<Point*>& points){
@@ -115,6 +75,28 @@ void Point::verify_proper_point_input_or_die(const std::vector<Point*>& points){
         
     //TODO check if samples vary
 
+}
+
+double Point::get_distance_between_points(const Point* p1, const Point* p2){
+
+    int len = p1->num_data_samples;
+    //double dist = morten_pearsoncorr(len, p1->sample_data, p2->sample_data);
+    double dist = pearsoncorr_from_precomputed(len, p1->sample_data_pearson_precomputed, p2->sample_data_pearson_precomputed);
+
+    if(log_level >= logDEBUG3){
+        _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
+        _log(logDEBUG3) << "point: " << p1->id;
+        for(int i=0; i < p1->num_data_samples; i++){
+            _log(logDEBUG3) << "\t"<<p1->sample_data[i];
+        }
+        _log(logDEBUG3) << "point: " << p2->id;
+        for(int i=0; i < p2->num_data_samples; i++){
+            _log(logDEBUG3) << "\t"<<p2->sample_data[i];
+        }
+        _log(logDEBUG3) << "distance: " << dist;
+    }
+
+    return dist; 
 }
 
 Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
