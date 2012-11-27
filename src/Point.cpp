@@ -35,7 +35,7 @@ Point::Point(std::string point_file_line){
         _log(logDEBUG3) << "\"" << sample_data_vector[i] << "\"" << "\t" << atof(sample_data_vector[i].c_str()) << "\t" << sample_data[i-1];
     }
 
-    sample_data_pearson_precomputed = precompute_pearson_data(sample_data);
+    sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
 
 }
 
@@ -48,7 +48,7 @@ Point::Point(const Point& p){
         sample_data[i] = p.sample_data[i];
     }
 
-    sample_data_pearson_precomputed = precompute_pearson_data(sample_data);
+    sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
 }
 
 
