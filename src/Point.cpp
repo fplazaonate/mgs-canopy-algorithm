@@ -14,15 +14,23 @@
 #include <Log.hpp>
 #include <Stats.hpp>
 
+using namespace std;
 
-Point::Point(std::string point_file_line){
+Point::Point(char* line){
 
-    std::vector<std::string> sample_data_vector;
-    boost::split(sample_data_vector, point_file_line, boost::is_any_of(" \t"), boost::token_compress_on);
+    std::vector<double> sample_data_vector;
+    sample_data_vector.reserve(700);
 
+    char* word = strtok(line, "\t ");
+    id = string(word);
+
+    word = strtok(NULL, "\t ");
+    while( word != NULL ){
+        sample_data_vector.push_back((double)atof(word));
+        word = strtok(NULL, "\t ");
+    }
 
     //Read ID
-    id = sample_data_vector[0];
     _log(logDEBUG2)<< "\"" << id << "\""; 
 
     //Copy data from temp vector to array
@@ -31,8 +39,36 @@ Point::Point(std::string point_file_line){
     sample_data = new double[num_data_samples];
 
     for(int i = 1; i < sample_data_vector.size(); i++){
-        sample_data[i-1] = (double)atof(sample_data_vector[i].c_str());
-        _log(logDEBUG3) << "\"" << sample_data_vector[i] << "\"" << "\t" << atof(sample_data_vector[i].c_str()) << "\t" << sample_data[i-1];
+        sample_data[i-1] = sample_data_vector[i];
+    }
+
+    sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
+
+}
+Point::Point(std::string point_file_line){
+
+    std::list<std::string> sample_data_vector;
+    //sample_data_vector.resize(700);
+    boost::split(sample_data_vector, point_file_line, boost::is_any_of(" \t"), boost::token_compress_on);
+    //cout << sample_data_vector.size() << endl;
+
+
+    //Read ID
+    id = sample_data_vector.front();
+    sample_data_vector.pop_front();
+    _log(logDEBUG2)<< "\"" << id << "\""; 
+
+    //Copy data from temp vector to array
+    num_data_samples = sample_data_vector.size() - 1;
+
+    sample_data = new double[num_data_samples];
+
+    int i = 0;
+    while(sample_data_vector.size()){
+        sample_data[i-1] = (double)atof(sample_data_vector.front().c_str());
+        sample_data_vector.pop_front();
+        //_log(logDEBUG3) << "\"" << sample_data_vector[i] << "\"" << "\t" << atof(sample_data_vector[i].c_str()) << "\t" << sample_data[i-1];
+        i++;
     }
 
     sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
@@ -83,18 +119,18 @@ double Point::get_distance_between_points(const Point* p1, const Point* p2){
     //double dist = morten_pearsoncorr(len, p1->sample_data, p2->sample_data);
     double dist = pearsoncorr_from_precomputed(len, p1->sample_data_pearson_precomputed, p2->sample_data_pearson_precomputed);
 
-    if(log_level >= logDEBUG3){
-        _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
-        _log(logDEBUG3) << "point: " << p1->id;
-        for(int i=0; i < p1->num_data_samples; i++){
-            _log(logDEBUG3) << "\t"<<p1->sample_data[i];
-        }
-        _log(logDEBUG3) << "point: " << p2->id;
-        for(int i=0; i < p2->num_data_samples; i++){
-            _log(logDEBUG3) << "\t"<<p2->sample_data[i];
-        }
-        _log(logDEBUG3) << "distance: " << dist;
-    }
+    //if(log_level >= logDEBUG3){
+    //    _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
+    //    _log(logDEBUG3) << "point: " << p1->id;
+    //    for(int i=0; i < p1->num_data_samples; i++){
+    //        _log(logDEBUG3) << "\t"<<p1->sample_data[i];
+    //    }
+    //    _log(logDEBUG3) << "point: " << p2->id;
+    //    for(int i=0; i < p2->num_data_samples; i++){
+    //        _log(logDEBUG3) << "\t"<<p2->sample_data[i];
+    //    }
+    //    _log(logDEBUG3) << "distance: " << dist;
+    //}
 
     return dist; 
 }

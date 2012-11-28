@@ -2,6 +2,11 @@
 #include <string>
 #include <iostream>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h> /* mmap() is defined in this header */
+#include <fcntl.h>
+
 #include <boost/program_options.hpp>
 
 #include <boost/iostreams/stream.hpp>
@@ -14,9 +19,8 @@
 #include <Log.hpp>
 
 using namespace std;
-using namespace boost::iostreams;
+//using namespace boost::iostreams;
 using namespace boost::program_options;
-
 
 
 void verify_input_correctness(const options_description& command_line_desc, const variables_map& command_line_variable_map){
@@ -60,15 +64,48 @@ int main(int argc, const char* argv[])
     //Parse point description file
     //
     vector<Point*> points;
-    
-    stream<mapped_file_source> point_input_file;
-    point_input_file.open(command_line_variable_map["point_input_file"].as<string>());
 
-    string line;
-    getline(point_input_file, line);//Ignore first line
-    while(getline(point_input_file, line)){
-        points.push_back(new Point(line.c_str()));
+    int point_file;
+    char* point_file_mmap;
+    struct stat statbuf;
+
+    /* open the input file */
+    point_file = open(command_line_variable_map["point_input_file"].as<string>().c_str(), O_RDONLY);
+
+    /* find size of input file */
+    fstat(point_file,&statbuf);
+
+    /* mmap the input file */
+    point_file_mmap = (char*)mmap (0, statbuf.st_size, PROT_WRITE, MAP_PRIVATE, point_file, 0);
+
+    char* line_start_ptr = point_file_mmap;
+    char* line_end_ptr = point_file_mmap;
+    char* mmap_end_ptr = point_file_mmap + statbuf.st_size;
+    while(line_start_ptr < mmap_end_ptr){
+        line_end_ptr = line_start_ptr;
+        while(*line_end_ptr != '\n' && *line_end_ptr != '\r' && line_end_ptr < mmap_end_ptr){
+            line_end_ptr++;
+        }
+        if(line_end_ptr != line_start_ptr && line_start_ptr != point_file_mmap){//Check if the line is not empty
+            *line_end_ptr = '\0';
+            //cout << line_start_ptr << endl;
+            points.push_back(new Point(line_start_ptr));
+        }
+        line_start_ptr = ++line_end_ptr;
     }
+
+    /* drop the file from memory*/
+    munmap(point_file_mmap, statbuf.st_size);
+    
+    //stream<mapped_file_source> point_input_file;
+    //point_input_file.open(command_line_variable_map["point_input_file"].as<string>());
+
+    //string line;
+    //getline(point_input_file, line);//Ignore first line
+    //while(getline(point_input_file, line)){
+    //    points.push_back(new Point(line.c_str()));
+    //}
+    //exit(1);
 
     Point::verify_proper_point_input_or_die(points);
 

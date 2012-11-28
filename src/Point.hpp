@@ -19,6 +19,7 @@ class Point {
 
     public:
         Point(const Point& p);
+        Point(char* line);
         Point(std::string point_file_line);
         ~Point();
         
