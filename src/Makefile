@@ -18,7 +18,8 @@ COMP = $(GNU_COMP)
 COMP_OPENMP = $(GNU_OPENMP)
 endif
 
-ADDITIONAL_OPTS = -O3 -msse4.2 #-p -g #-O3 -DAE_CPU=AE_INTEL#-Wall 
+ADDITIONAL_OPTS = -p -g 
+#ADDITIONAL_OPTS = -O3 -msse4.2 
 
 ALGLIB_PATH = ../lib/alglib/src/
 

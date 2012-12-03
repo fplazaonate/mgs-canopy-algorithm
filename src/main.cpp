@@ -122,7 +122,12 @@ int main(int argc, const char* argv[])
     cout << "####################Results####################" << endl;
     cout << "####################Results####################" << endl;
     BOOST_FOREACH(Canopy* c, canopies){
-        cout << *c;
+        //cout << *c;
+        cout << "canopy: ";
+        BOOST_FOREACH(Point* p, c->neighbours){
+            cout << p->id << " ";
+        }
+        cout << endl;
     }
 
     BOOST_FOREACH(Canopy* c, canopies)
