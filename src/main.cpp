@@ -125,7 +125,7 @@ int main(int argc, const char* argv[])
         //cout << *c;
         cout << "canopy: ";
         BOOST_FOREACH(Point* p, c->neighbours){
-            cout << p->id << " ";
+            cout << p->id << ", ";
         }
         cout << endl;
     }
