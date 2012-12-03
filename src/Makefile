@@ -3,7 +3,8 @@
 ############################################################
 
 
-GNU_COMP = g++ 
+GNU_COMP = /opt/local/bin/g++-mp-4.7
+#GNU_COMP = g++
 GNU_OPENMP = #-fopenmp
 
 CLANG_COMP = clang++ 
@@ -17,7 +18,7 @@ COMP = $(GNU_COMP)
 COMP_OPENMP = $(GNU_OPENMP)
 endif
 
-ADDITIONAL_OPTS = -p -g #-O3 -DAE_CPU=AE_INTEL#-Wall 
+ADDITIONAL_OPTS = -O3 -msse4.2 #-p -g #-O3 -DAE_CPU=AE_INTEL#-Wall 
 
 ALGLIB_PATH = ../lib/alglib/src/
 

@@ -70,9 +70,17 @@ std::vector<Canopy*> CanopyClusteringAlg::single_core_run_clustering_on(std::vec
         _log(logDEBUG3) << *c2;
         _log(logDEBUG3) << "correlation: " << correlation;
 
+        //cout << "Point1:" << endl;
+        //cout << *c1 << endl;
+        //cout << "Point2:" << endl;
+        //cout << *c2 << endl;
+        //cout << "First potential jump correlation: " << correlation << endl;
+        int i = 1;
 
         while(correlation < canopy_iteration_min_correlation){
             c1=c2;
+
+            i++;
 
             c2=create_canopy(c1->center, marked_points, points, min_canopy_correlation);
             correlation = Point::get_distance_between_points(c1->center, c2->center); 
@@ -80,6 +88,8 @@ std::vector<Canopy*> CanopyClusteringAlg::single_core_run_clustering_on(std::vec
             _log(logDEBUG3) << *c2;
             _log(logDEBUG3) << "correlation: " << correlation;
         }
+
+        cout << "Num canopy jumps: " << i << endl;
 
         canopy_vector.push_back(c2);
 

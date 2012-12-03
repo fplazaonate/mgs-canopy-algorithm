@@ -19,8 +19,7 @@ class Point {
 
     public:
         Point(const Point& p);
-        Point(char* line);
-        Point(std::string point_file_line);
+        Point(const char* line);
         ~Point();
         
         bool operator==(const Point& other) const;

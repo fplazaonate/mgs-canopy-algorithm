@@ -36,7 +36,7 @@ double* precompute_pearson_data(int sample_data_length, const double* sample_dat
     return precomputed_pearson_data;
 }
 
-double pearsoncorr_from_precomputed(int n, const double* v1, const double* v2){
+double pearsoncorr_from_precomputed(int n, const double* __restrict__  v1, const double* __restrict__  v2){
     double sum = 0;
     for(int i = 0; i < n; i++){
         sum += v1[i] * v2[i];

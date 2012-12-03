@@ -16,12 +16,15 @@
 
 using namespace std;
 
-Point::Point(char* line){
+Point::Point(const char* line){
+
+    char* private_line = new char[strlen(line) + 1];
+    strcpy(private_line,line);
 
     std::vector<double> sample_data_vector;
     sample_data_vector.reserve(700);
 
-    char* word = strtok(line, "\t ");
+    char* word = strtok(private_line, "\t ");
     id = string(word);
 
     word = strtok(NULL, "\t ");
@@ -44,34 +47,7 @@ Point::Point(char* line){
 
     sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
 
-}
-Point::Point(std::string point_file_line){
-
-    std::list<std::string> sample_data_vector;
-    //sample_data_vector.resize(700);
-    boost::split(sample_data_vector, point_file_line, boost::is_any_of(" \t"), boost::token_compress_on);
-    //cout << sample_data_vector.size() << endl;
-
-
-    //Read ID
-    id = sample_data_vector.front();
-    sample_data_vector.pop_front();
-    _log(logDEBUG2)<< "\"" << id << "\""; 
-
-    //Copy data from temp vector to array
-    num_data_samples = sample_data_vector.size() - 1;
-
-    sample_data = new double[num_data_samples];
-
-    int i = 0;
-    while(sample_data_vector.size()){
-        sample_data[i-1] = (double)atof(sample_data_vector.front().c_str());
-        sample_data_vector.pop_front();
-        //_log(logDEBUG3) << "\"" << sample_data_vector[i] << "\"" << "\t" << atof(sample_data_vector[i].c_str()) << "\t" << sample_data[i-1];
-        i++;
-    }
-
-    sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
+    delete private_line;
 
 }
 
@@ -145,22 +121,33 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
 
     int num_samples = points[0]->num_data_samples;
 
-    for(int sample = 0; sample < num_samples; sample++){
+    _log(logDEBUG4) << "num samples: " << num_samples;
+
+    for(int i = 0; i < num_samples; i++){
 
         std::vector<double> point_samples;
 
         BOOST_FOREACH(const Point* p, points){
 
             //TODO: this is slow as hell
-            point_samples.push_back(p->sample_data[sample]);
+            point_samples.push_back(p->sample_data[i]);
 
         }
 
         std::sort(point_samples.begin(), point_samples.end());
 
-        double median = point_samples[int(point_samples.size()/2)];
+        double median = -1;
 
-        centroid->sample_data[sample] = median;
+        int mid = floor((point_samples.size() - 1)/2);
+        if(!(point_samples.size()%2)){
+            median = (point_samples[mid] + point_samples[mid+1])/2.0; 
+        } else {
+            median = point_samples[mid];
+        }
+
+        assert(median != -1);
+
+        centroid->sample_data[i] = median;
     }
     
     return centroid;
