@@ -18,8 +18,8 @@ COMP = $(GNU_COMP)
 COMP_OPENMP = $(GNU_OPENMP)
 endif
 
-ADDITIONAL_OPTS = -p -g 
-#ADDITIONAL_OPTS = -O3 -msse4.2 
+#ADDITIONAL_OPTS = -p -g 
+ADDITIONAL_OPTS = -O3 -msse4.2 
 
 ALGLIB_PATH = ../lib/alglib/src/
 

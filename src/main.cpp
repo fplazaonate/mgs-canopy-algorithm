@@ -118,9 +118,9 @@ int main(int argc, const char* argv[])
     std::vector<Canopy*> canopies;
     canopies = CanopyClusteringAlg::single_core_run_clustering_on(points);
 
-    cout << "####################Results####################" << endl;
-    cout << "####################Results####################" << endl;
-    cout << "####################Results####################" << endl;
+    //cout << "####################Results####################" << endl;
+    //cout << "####################Results####################" << endl;
+    //cout << "####################Results####################" << endl;
     BOOST_FOREACH(Canopy* c, canopies){
         //cout << *c;
         cout << "canopy: ";
