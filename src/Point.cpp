@@ -12,15 +12,28 @@
 
 #include <Point.hpp>
 #include <Log.hpp>
+#include <Stats.hpp>
 
-Point::Point(std::string point_file_line){
+using namespace std;
 
-    std::vector<std::string> sample_data_vector;
-    boost::split(sample_data_vector, point_file_line, boost::is_any_of(" \t"), boost::token_compress_on);
+Point::Point(const char* line){
 
+    char* private_line = new char[strlen(line) + 1];
+    strcpy(private_line,line);
+
+    std::vector<double> sample_data_vector;
+    sample_data_vector.reserve(700);
+
+    char* word = strtok(private_line, "\t ");
+    id = string(word);
+
+    word = strtok(NULL, "\t ");
+    while( word != NULL ){
+        sample_data_vector.push_back((double)atof(word));
+        word = strtok(NULL, "\t ");
+    }
 
     //Read ID
-    id = sample_data_vector[0];
     _log(logDEBUG2)<< "\"" << id << "\""; 
 
     //Copy data from temp vector to array
@@ -29,9 +42,13 @@ Point::Point(std::string point_file_line){
     sample_data = new double[num_data_samples];
 
     for(int i = 1; i < sample_data_vector.size(); i++){
-        sample_data[i-1] = (double)atof(sample_data_vector[i].c_str());
-        _log(logDEBUG3) << "\"" << sample_data_vector[i] << "\"" << "\t" << atof(sample_data_vector[i].c_str()) << "\t" << sample_data[i-1];
+        sample_data[i-1] = sample_data_vector[i];
     }
+
+    sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
+
+    delete private_line;
+
 }
 
 Point::Point(const Point& p){
@@ -42,62 +59,17 @@ Point::Point(const Point& p){
     for(int i=0; i < num_data_samples;i++){
         sample_data[i] = p.sample_data[i];
     }
+
+    sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
 }
 
 
 Point::~Point(){
     if(sample_data)
         delete sample_data;
-}
 
-double morten_pearsoncorr(int n, const double* v1, const double* v2){
-	int	i;
-	double x0=0,y0=0;
-	double t, nx, ny;
-	double c;
-
-    for(int i = 0; i < n; i++){
-        x0+=v1[i];
-        y0+=v2[i];
-    }
-    x0/=n;
-    y0/=n;
-
-	t = nx = ny = 0.0;
-
-	for ( i=0;i<n;i++ ) {
-		t += ( v1[i] - x0 ) * ( v2[i] - y0 );
-		nx += ( v1[i] - x0 ) * ( v1[i] - x0 );
-		ny += ( v2[i] - y0 ) * ( v2[i] - y0 );
-	}
-
-	if ( nx * ny == 0.0 )
-		c = 0.0;
-	else
-		c = t/sqrt(nx*ny);
-
-	return( c );
-}
-
-double Point::get_distance_between_points(const Point* p1, const Point* p2){
-
-    int len = p1->num_data_samples;
-    double dist = morten_pearsoncorr(len, p1->sample_data, p2->sample_data);
-
-    if(log_level >= logDEBUG3){
-        _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
-        _log(logDEBUG3) << "point: " << p1->id;
-        for(int i=0; i < p1->num_data_samples; i++){
-            _log(logDEBUG3) << "\t"<<p1->sample_data[i];
-        }
-        _log(logDEBUG3) << "point: " << p2->id;
-        for(int i=0; i < p2->num_data_samples; i++){
-            _log(logDEBUG3) << "\t"<<p2->sample_data[i];
-        }
-        _log(logDEBUG3) << "distance: " << dist;
-    }
-
-    return dist; 
+    if(sample_data_pearson_precomputed)
+        delete sample_data_pearson_precomputed;
 }
 
 void Point::verify_proper_point_input_or_die(const std::vector<Point*>& points){
@@ -117,6 +89,28 @@ void Point::verify_proper_point_input_or_die(const std::vector<Point*>& points){
 
 }
 
+double Point::get_distance_between_points(const Point* p1, const Point* p2){
+
+    int len = p1->num_data_samples;
+    //double dist = morten_pearsoncorr(len, p1->sample_data, p2->sample_data);
+    double dist = pearsoncorr_from_precomputed(len, p1->sample_data_pearson_precomputed, p2->sample_data_pearson_precomputed);
+
+    //if(log_level >= logDEBUG3){
+    //    _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
+    //    _log(logDEBUG3) << "point: " << p1->id;
+    //    for(int i=0; i < p1->num_data_samples; i++){
+    //        _log(logDEBUG3) << "\t"<<p1->sample_data[i];
+    //    }
+    //    _log(logDEBUG3) << "point: " << p2->id;
+    //    for(int i=0; i < p2->num_data_samples; i++){
+    //        _log(logDEBUG3) << "\t"<<p2->sample_data[i];
+    //    }
+    //    _log(logDEBUG3) << "distance: " << dist;
+    //}
+
+    return dist; 
+}
+
 Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
 
     //TODO: median should be estimated using boost/accumulators/statistics/median.hpp
@@ -127,22 +121,33 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
 
     int num_samples = points[0]->num_data_samples;
 
-    for(int sample = 0; sample < num_samples; sample++){
+    _log(logDEBUG4) << "num samples: " << num_samples;
+
+    for(int i = 0; i < num_samples; i++){
 
         std::vector<double> point_samples;
 
         BOOST_FOREACH(const Point* p, points){
 
             //TODO: this is slow as hell
-            point_samples.push_back(p->sample_data[sample]);
+            point_samples.push_back(p->sample_data[i]);
 
         }
 
         std::sort(point_samples.begin(), point_samples.end());
 
-        double median = point_samples[int(point_samples.size()/2)];
+        double median = -1;
 
-        centroid->sample_data[sample] = median;
+        int mid = floor((point_samples.size() - 1)/2);
+        if(!(point_samples.size()%2)){
+            median = (point_samples[mid] + point_samples[mid+1])/2.0; 
+        } else {
+            median = point_samples[mid];
+        }
+
+        assert(median != -1);
+
+        centroid->sample_data[i] = median;
     }
     
     return centroid;

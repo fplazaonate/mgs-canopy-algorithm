@@ -14,9 +14,15 @@ std::ostream& operator<<(std::ostream& ost, const Canopy& c)
 {
     ost << ">>>>>>>>>>Canopy>>>>>>>>" << std::endl;
     ost << "Origin:" << std::endl;
-    ost << *c.origin;
+    if(c.origin != NULL)
+        ost << *c.origin;
+    else
+        ost << "===NONE===" << endl;
     ost << "Center:" << std::endl;
-    ost << *c.center;
+    if(c.center != NULL)
+        ost << *c.center;
+    else
+        ost << "===NONE===" << endl;
     ost << "Neighbours:" << std::endl;
     BOOST_FOREACH(const Point* p, c.neighbours)
         ost << p->id << "\t";
