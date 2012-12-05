@@ -29,7 +29,7 @@ class Point {
         static double get_distance_between_points(const Point* p1, const Point* p2);
         static Point* get_centroid_of_points(const std::vector<Point*>& points);
         static void verify_proper_point_input_or_die(const std::vector<Point*>& points);
-        static std::vector<Point> filter_out_input_points(const std::vector<Point*>& points);
+        static void filter_out_input_points(std::vector<Point*>& points);
 
         friend double* precompute_pearson_data(double* sample_data);
         friend double morten_pearsoncorr(int n, const vector<double>& v1, const vector<double>& v2);

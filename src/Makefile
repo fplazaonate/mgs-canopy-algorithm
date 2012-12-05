@@ -5,7 +5,7 @@
 
 GNU_COMP = /opt/local/bin/g++-mp-4.7
 #GNU_COMP = g++
-GNU_OPENMP = #-fopenmp
+GNU_OPENMP = -fopenmp
 
 CLANG_COMP = clang++ 
 CLANG_OPENMP = #-fopenmp

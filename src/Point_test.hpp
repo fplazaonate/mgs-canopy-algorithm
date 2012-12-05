@@ -46,4 +46,37 @@ BOOST_AUTO_TEST_CASE( test_centroid_calculation){
 
 }
 
+
+BOOST_AUTO_TEST_CASE( test_filtering_out_input_points ){
+
+    vector<Point*> points;
+    points.push_back(new Point("id_1 1 1 1 1 1 1 1 1"));
+    points.push_back(new Point("id_2 0 0 0 0 0 2 2 2"));
+    points.push_back(new Point("id_3 0 0 0 0 0 0 3 3"));
+    points.push_back(new Point("id_4 4 4 4 4 4 4 4 4"));
+    points.push_back(new Point("id_5 0 0 0 0 0 0 0 0"));
+    points.push_back(new Point("id_6 0 0 0 0 0 0 0 6"));
+    points.push_back(new Point("id_7 7 7 7 7 7 7 7 7"));
+    points.push_back(new Point("id_8 0 0 0 0 0 0 0 0"));
+    points.push_back(new Point("id_9 9 9 9 9 9 9 9 9"));
+    points.push_back(new Point("id_10 0 0 0 0 10 10 10 10"));
+    points.push_back(new Point("id_11 11 11 11 11 11 11 11 11"));
+
+    Point::verify_proper_point_input_or_die(points);
+
+    BOOST_CHECK_EQUAL(points.size(), 11);
+
+    Point::filter_out_input_points(points);
+
+    BOOST_CHECK_EQUAL(points.size(), 7);
+
+    BOOST_CHECK(points[2] != NULL);
+    BOOST_CHECK(points[4] != NULL);
+    BOOST_CHECK(points[5] != NULL);
+    BOOST_CHECK(points[7] != NULL);
+    
+    BOOST_FOREACH(Point* p, points)
+        delete p;
+}
+
 #endif

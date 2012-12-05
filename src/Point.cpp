@@ -153,6 +153,40 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
     return centroid;
 }
 
+void Point::filter_out_input_points(std::vector<Point*>& points){
+
+    //TODO: make a parameter
+    int min_non_zero_data_samples = 3;
+
+    int num_points = points.size();
+    int num_data_samples = points[0]->num_data_samples;
+
+    vector<int> indexes_to_drop;
+
+    for(int i = 0; i < num_points; i++){
+        int num_non_zero_samples = 0;
+        for(int j = 0; j < num_data_samples; j++){
+            if( points[i]->sample_data[j] > 0.0000001 ){
+                num_non_zero_samples++;
+                if(num_non_zero_samples >= min_non_zero_data_samples)
+                    break;
+            }
+        }
+        if(num_non_zero_samples < min_non_zero_data_samples)
+            indexes_to_drop.push_back(i);
+    }
+
+    std::sort(indexes_to_drop.begin(), indexes_to_drop.end());
+    std::reverse(indexes_to_drop.begin(), indexes_to_drop.end());
+
+    for(int i = 0; i < indexes_to_drop.size(); i++){
+        delete points[indexes_to_drop[i]];
+        points.erase(points.begin() + indexes_to_drop[i]);
+    }
+
+
+
+}
 
 std::size_t hash_value(const Point& p){
     boost::hash<std::string> hasher;

@@ -108,6 +108,8 @@ int main(int argc, const char* argv[])
     //exit(1);
 
     Point::verify_proper_point_input_or_die(points);
+    Point::filter_out_input_points(points);
+
 
     _log(logINFO) << "Finished reading point input file";
     _log(logINFO) << "Number of points read: " << points.size();
@@ -116,7 +118,8 @@ int main(int argc, const char* argv[])
     //Run Canopy Clustering
     //
     std::vector<Canopy*> canopies;
-    canopies = CanopyClusteringAlg::single_core_run_clustering_on(points);
+    //canopies = CanopyClusteringAlg::single_core_run_clustering_on(points);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points);
 
     //cout << "####################Results####################" << endl;
     //cout << "####################Results####################" << endl;
