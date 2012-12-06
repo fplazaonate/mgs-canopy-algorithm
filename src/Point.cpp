@@ -116,6 +116,8 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
     //TODO: median should be estimated using boost/accumulators/statistics/median.hpp
 
     Point* centroid = new Point(*points[0]);
+    //TODO: Could be done better
+    centroid->id = "!GENERATED!";
     
     assert(points.size());
 

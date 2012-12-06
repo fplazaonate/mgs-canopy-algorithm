@@ -8,7 +8,7 @@ Canopy::Canopy(){
     origin = NULL;
 }
 
-Canopy::Canopy(Point* origin, Point* center, std::vector<Point*>& neighbours): origin(origin), center(center), neighbours(neighbours){}
+Canopy::Canopy(Point* origin, Point* center, std::vector<Point*> neighbours): origin(origin), center(center), neighbours(neighbours){}
 
 std::ostream& operator<<(std::ostream& ost, const Canopy& c)
 {

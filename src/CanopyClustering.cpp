@@ -19,9 +19,11 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, boost::unordered_set<P
         }
     }
 
+    neighbours.push_back(origin);
+
     Point* center;
 
-    if(!neighbours.size())
+    if(neighbours.size() == 1)
         center = origin;
     else
         center = Point::get_centroid_of_points(neighbours);
@@ -71,9 +73,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
         c1 = create_canopy(origin, marked_points, points, min_canopy_correlation );
 
-        Point* c2_origin = c1->neighbours.size() > 0 ? Point::get_centroid_of_points(c1->neighbours) : c2->origin = c1->origin;
+        //Point* c2_origin = c1->neighbours.size() > 0 ? Point::get_centroid_of_points(c1->neighbours) : c2->origin = c1->origin;
 
-        c2 = create_canopy(c2_origin, marked_points, points, min_canopy_correlation);
+        c2 = create_canopy(c1->center, marked_points, points, min_canopy_correlation);
 
         double correlation = Point::get_distance_between_points(c1->center, c2->center);
 
@@ -89,6 +91,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
         //int i = 1;
 
         while(correlation < canopy_iteration_min_correlation){
+            delete c1;
             c1=c2;
 
             //i++;
@@ -108,6 +111,10 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
             BOOST_FOREACH(Point* n, c2->neighbours){
                 marked_points.insert(n);
+            }
+            //TODO: Could be done better
+            if(c2->origin->id != "!GENERATED!"){
+                marked_points.insert(c2->origin);
             }
         }
 
@@ -147,8 +154,12 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
             _log(logDEBUG3) << "Correlation: " << correlation;
 
-            if(correlation > canopy_merge_distance_threshold)
-                canopies_to_be_merged_index_vector.push_back(i);
+            if(correlation > canopy_merge_distance_threshold){
+#pragma omp critical
+                {
+                    canopies_to_be_merged_index_vector.push_back(i);
+                }
+            }
 
         }
 
@@ -259,7 +270,9 @@ std::vector<Canopy*> CanopyClusteringAlg::single_core_run_clustering_on(std::vec
         //int i = 1;
 
         while(correlation < canopy_iteration_min_correlation){
+            delete c1;
             c1=c2;
+
 
             //i++;
 

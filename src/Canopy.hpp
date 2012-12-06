@@ -10,7 +10,7 @@ using namespace std;
 class Canopy {
     public:
         Canopy();
-        Canopy(Point* origin, Point* center, std::vector<Point*>& neighbours);
+        Canopy(Point* origin, Point* center, std::vector<Point*> neighbours);
         
 
         Point* origin;
