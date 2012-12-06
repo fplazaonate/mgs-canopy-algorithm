@@ -41,7 +41,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
     _log(logDEBUG1) << "############Creating Canopies############";
 
     double min_canopy_correlation = 0.9;
-    double canopy_merge_distance_threshold = 0.97;
+    double canopy_merge_distance_threshold = 0.9;
     double canopy_iteration_min_correlation = 0.1;
 
     //TODO: ensure it is actually random
@@ -61,10 +61,13 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
          Point* origin = points[origin_i]; 
 
-        _log(logINFO) << "Unmarked points count: " << points.size() - marked_points.size();
-
         if(marked_points.find(origin) != marked_points.end())
             continue;
+        else
+            marked_points.insert(origin);
+
+        _log(logINFO) << "Unmarked points count: " << points.size() - marked_points.size() << " Marked points count: " << marked_points.size();
+        _log(logINFO) << "points.size: " << points.size() << " origin_i: " << origin_i << " origin->id: " << origin->id ;
 
         _log(logDEBUG2) << "Current canopy origin: " << origin->id;
 
@@ -72,8 +75,6 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
         Canopy *c2;
 
         c1 = create_canopy(origin, marked_points, points, min_canopy_correlation );
-
-        //Point* c2_origin = c1->neighbours.size() > 0 ? Point::get_centroid_of_points(c1->neighbours) : c2->origin = c1->origin;
 
         c2 = create_canopy(c1->center, marked_points, points, min_canopy_correlation);
 
@@ -107,14 +108,14 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
 #pragma omp critical
         {
-            canopy_vector.push_back(c2);
+            canopy_vector.push_back(c1);
 
-            BOOST_FOREACH(Point* n, c2->neighbours){
+            BOOST_FOREACH(Point* n, c1->neighbours){
                 marked_points.insert(n);
             }
             //TODO: Could be done better
-            if(c2->origin->id != "!GENERATED!"){
-                marked_points.insert(c2->origin);
+            if(c1->origin->id != "!GENERATED!"){
+                marked_points.insert(c1->origin);
             }
         }
 
