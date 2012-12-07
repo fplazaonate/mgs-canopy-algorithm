@@ -151,6 +151,9 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
 
         centroid->sample_data[i] = median;
     }
+
+    //TODO: sample_data_pearson_precomputed  allocated in copy constructor might be completely lost here
+    centroid->sample_data_pearson_precomputed = precompute_pearson_data(centroid->num_data_samples, centroid->sample_data);
     
     return centroid;
 }
