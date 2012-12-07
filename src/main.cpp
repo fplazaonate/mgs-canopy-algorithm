@@ -120,6 +120,18 @@ int main(int argc, const char* argv[])
     std::vector<Canopy*> canopies;
     //canopies = CanopyClusteringAlg::single_core_run_clustering_on(points);
     canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points);
+    
+    _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
+
+    CanopyClusteringAlg::filter_clusters_by_zero_medians(4, canopies);
+
+    _log(logINFO) << "Finished filtering by medians, number of canopies:" << canopies.size();
+
+    CanopyClusteringAlg::filter_clusters_by_single_point_skew(0.9, canopies);
+
+    _log(logINFO) << "Finished filtering by single data point proportion, number of canopies:" << canopies.size();
+
+    //Filter out canopies
 
     //cout << "####################Results####################" << endl;
     //cout << "####################Results####################" << endl;
@@ -138,6 +150,7 @@ int main(int argc, const char* argv[])
 
     BOOST_FOREACH(Point* point, points)
         delete point;
+
 
 
 

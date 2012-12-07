@@ -72,6 +72,33 @@ Point::~Point(){
         delete sample_data_pearson_precomputed;
 }
 
+bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
+
+    int num_non_zero_medians = 0;
+    for(int i=0; i < num_data_samples; i++){
+        if(sample_data[i] > 0.0000001){
+            num_non_zero_medians++;
+            if(num_non_zero_medians >= x)
+                return true;
+        }
+    }
+    return false;
+}
+
+bool Point::check_if_single_point_proportion_is_smaller_than(double x){
+    double sum_data_samples = 0;
+    double max_data_sample = 0;
+
+    for(int i=0; i < num_data_samples; i++){
+        if(max_data_sample < sample_data[i])
+            max_data_sample = sample_data[i];
+
+        sum_data_samples += sample_data[i];
+    }
+
+    return (max_data_sample / sum_data_samples) < x;
+}
+
 void Point::verify_proper_point_input_or_die(const std::vector<Point*>& points){
     
     //Verify all points have the same number of samples

@@ -32,6 +32,42 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, boost::unordered_set<P
 
 }
 
+void CanopyClusteringAlg::filter_clusters_by_single_point_skew(double max_single_data_point_proportion, std::vector<Canopy*>& canopies_to_filter){
+
+    vector<int> canopy_indexes_to_remove;
+
+    for(int i=0; i < canopies_to_filter.size(); i++){
+        Point* ccenter = canopies_to_filter[i]->center;
+        if(! ccenter->check_if_single_point_proportion_is_smaller_than(max_single_data_point_proportion) )
+            canopy_indexes_to_remove.push_back(i);
+    }
+
+    std::sort(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
+    std::reverse(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
+
+    for(int i=0; i < canopy_indexes_to_remove.size(); i++)
+        canopies_to_filter.erase(canopies_to_filter.begin() + canopy_indexes_to_remove[i]);
+
+}
+
+void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_medians, std::vector<Canopy*>& canopies_to_filter){
+
+    vector<int> canopy_indexes_to_remove;
+
+    for(int i=0; i < canopies_to_filter.size(); i++){
+        Point* ccenter = canopies_to_filter[i]->center;
+        if(! ccenter->check_if_num_non_zero_samples_is_greater_than_x(min_num_non_zero_medians) )
+            canopy_indexes_to_remove.push_back(i);
+    }
+
+    std::sort(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
+    std::reverse(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
+
+    for(int i=0; i < canopy_indexes_to_remove.size(); i++)
+        canopies_to_filter.erase(canopies_to_filter.begin() + canopy_indexes_to_remove[i]);
+
+}
+
 std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vector<Point*>& points){
 
     int num_threads = 4;
