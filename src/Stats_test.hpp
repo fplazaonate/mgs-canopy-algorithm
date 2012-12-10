@@ -40,8 +40,8 @@ BOOST_AUTO_TEST_CASE( test_pearson_precomputation_simple ){
 
     double* data1 = new double[num_samples];
     double* data2 = new double[num_samples];
-    double* pc_data1;
-    double* pc_data2;
+    double* pc_data1 = new double[num_samples];
+    double* pc_data2 = new double[num_samples];
     double* pc_data_morten_1;
     double* pc_data_morten_2;
 
@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE( test_pearson_precomputation_simple ){
         data2[i] = 2*i;
     }
 
-    pc_data1 = precompute_pearson_data(num_samples, data1);
-    pc_data2 = precompute_pearson_data(num_samples, data2);
+    precompute_pearson_data(num_samples, data1, pc_data1);
+    precompute_pearson_data(num_samples, data2, pc_data1);
 
     pc_data_morten_1 = precompute_pearson_data_morten(num_samples, data1);
     pc_data_morten_2 = precompute_pearson_data_morten(num_samples, data2);
@@ -72,9 +72,6 @@ BOOST_AUTO_TEST_CASE( test_pearson_precomputation_simple ){
     BOOST_CHECK_CLOSE( precomp_morten_pearson, 1, 1 );
     BOOST_CHECK_CLOSE( morten_pearson, 1, 1 );
 
-    delete pc_data1;
-    delete pc_data2;
-
     delete pc_data_morten_1;
     delete pc_data_morten_2;
 
@@ -86,8 +83,8 @@ BOOST_AUTO_TEST_CASE( test_pearson_precomputation_simple ){
         data2[i] = (-2)*i;
     }
 
-    pc_data1 = precompute_pearson_data(num_samples, data1);
-    pc_data2 = precompute_pearson_data(num_samples, data2);
+    precompute_pearson_data(num_samples, data1, pc_data1);
+    precompute_pearson_data(num_samples, data2, pc_data1);
 
     pc_data_morten_1 = precompute_pearson_data_morten(num_samples, data1);
     pc_data_morten_2 = precompute_pearson_data_morten(num_samples, data2);
@@ -119,6 +116,9 @@ BOOST_AUTO_TEST_CASE( test_pearson_precomputation_simple_random ){
 
     double* data1 = new double[num_samples];
     double* data2 = new double[num_samples];
+    double* pc_data1 = new double[num_samples];
+    double* pc_data2 = new double[num_samples];
+
 
     double precomp_pearson;
     double avg_precomp_pearson = 0;
@@ -128,21 +128,21 @@ BOOST_AUTO_TEST_CASE( test_pearson_precomputation_simple_random ){
         fill_array_with_random_data(data1, num_samples);
         fill_array_with_random_data(data2, num_samples);
 
-        double* pc_data1 = precompute_pearson_data(num_samples, data1);
-        double* pc_data2 = precompute_pearson_data(num_samples, data2);
+        precompute_pearson_data(num_samples, data1, pc_data1);
+        precompute_pearson_data(num_samples, data2, pc_data2);
 
         precomp_pearson = pearsoncorr_from_precomputed(num_samples, pc_data1, pc_data2);
 
         avg_precomp_pearson+=precomp_pearson;
 
 
-        delete pc_data1;
-        delete pc_data2;
     }
     avg_precomp_pearson/=num_iterations;
 
     delete data1;
     delete data2;
+    delete pc_data1;
+    delete pc_data2;
 
     BOOST_CHECK_SMALL(avg_precomp_pearson, 0.001);
 
@@ -157,6 +157,8 @@ BOOST_AUTO_TEST_CASE( test_pearson_precomputation_against_mortens )
 
     double* data1 = new double[num_samples];
     double* data2 = new double[num_samples];
+    double* pc_data1 = new double[num_samples]; 
+    double* pc_data2 = new double[num_samples]; 
 
     double precomp_pearson;
     double morten_pearson;
@@ -170,8 +172,8 @@ BOOST_AUTO_TEST_CASE( test_pearson_precomputation_against_mortens )
         fill_array_with_random_data(data1, num_samples);
         fill_array_with_random_data(data2, num_samples);
 
-        double* pc_data1 = precompute_pearson_data(num_samples, data1);
-        double* pc_data2 = precompute_pearson_data(num_samples, data2);
+        precompute_pearson_data(num_samples, data1, pc_data1);
+        precompute_pearson_data(num_samples, data2, pc_data2);
 
         double* pc_data_morten_1 = precompute_pearson_data_morten(num_samples, data1);
         double* pc_data_morten_2 = precompute_pearson_data_morten(num_samples, data2);

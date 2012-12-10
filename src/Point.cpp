@@ -17,15 +17,19 @@
 using namespace std;
 
 Point::Point(const char* line){
-
+    //Copy line to private buffer - strtok will modify it
     char* private_line = new char[strlen(line) + 1];
     strcpy(private_line,line);
+    _log(logDEBUG2)<< "Point constructor, got: \"" << line << "\""; 
 
-    std::vector<double> sample_data_vector;
-    sample_data_vector.reserve(700);
-
+    //Read gene id - first word in the line
     char* word = strtok(private_line, "\t ");
     id = string(word);
+    _log(logDEBUG2)<< "Point constructor, point id: \"" << id << "\""; 
+
+    //Fill vector with data samples
+    std::vector<double> sample_data_vector;
+    sample_data_vector.reserve(700);
 
     word = strtok(NULL, "\t ");
     while( word != NULL ){
@@ -33,22 +37,20 @@ Point::Point(const char* line){
         word = strtok(NULL, "\t ");
     }
 
-    //Read ID
-    _log(logDEBUG2)<< "\"" << id << "\""; 
+    //Get number of samples for this point
+    num_data_samples = sample_data_vector.size();
+    _log(logDEBUG2)<< "Point constructor, num data samples: \"" << num_data_samples << "\""; 
 
-    //Copy data from temp vector to array
-    num_data_samples = sample_data_vector.size() - 1;
-
+    //Allocate and copy samples into array
     sample_data = new double[num_data_samples];
-
-    for(int i = 1; i < sample_data_vector.size(); i++){
-        sample_data[i-1] = sample_data_vector[i];
+    sample_data_pearson_precomputed = new double[num_data_samples]; 
+    for(int i = 0; i < sample_data_vector.size(); i++){
+        sample_data[i] = sample_data_vector[i];
     }
 
-    sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
+    precompute_pearson_data(num_data_samples, sample_data, sample_data_pearson_precomputed);
 
     delete private_line;
-
 }
 
 Point::Point(const Point& p){
@@ -60,16 +62,16 @@ Point::Point(const Point& p){
         sample_data[i] = p.sample_data[i];
     }
 
-    sample_data_pearson_precomputed = precompute_pearson_data(num_data_samples, sample_data);
+    sample_data_pearson_precomputed = new double[num_data_samples];
+    for(int i=0; i < num_data_samples;i++){
+        sample_data_pearson_precomputed[i] = p.sample_data_pearson_precomputed[i];
+    }
 }
 
 
 Point::~Point(){
-    if(sample_data)
-        delete sample_data;
-
-    if(sample_data_pearson_precomputed)
-        delete sample_data_pearson_precomputed;
+    delete sample_data;
+    delete sample_data_pearson_precomputed;
 }
 
 bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
@@ -179,8 +181,7 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
         centroid->sample_data[i] = median;
     }
 
-    //TODO: sample_data_pearson_precomputed  allocated in copy constructor might be completely lost here
-    centroid->sample_data_pearson_precomputed = precompute_pearson_data(centroid->num_data_samples, centroid->sample_data);
+    precompute_pearson_data(centroid->num_data_samples, centroid->sample_data, centroid->sample_data_pearson_precomputed);
     
     return centroid;
 }

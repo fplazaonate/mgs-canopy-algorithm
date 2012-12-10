@@ -5,10 +5,7 @@
 #include <math.h>
 #include <limits>
 
-double* precompute_pearson_data(int sample_data_length, const double* sample_data){
-
-    //Calculate & verify sample_data length, Allocate new array of the same size
-    double* precomputed_pearson_data = new double[sample_data_length];
+void precompute_pearson_data(int sample_data_length, const double* __restrict__ sample_data, double* __restrict__ precomputed_pearson_data){
 
     //Calculate sum and average of data samples
     double sum = 0, avg = 0;
@@ -32,8 +29,6 @@ double* precompute_pearson_data(int sample_data_length, const double* sample_dat
         else
             precomputed_pearson_data[i] = (sample_data[i] - avg)/(stddev * sample_data_length);
     }
-        
-    return precomputed_pearson_data;
 }
 
 double pearsoncorr_from_precomputed(int n, const double* __restrict__  v1, const double* __restrict__  v2){
