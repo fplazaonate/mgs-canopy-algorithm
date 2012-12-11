@@ -8,38 +8,44 @@
 #include <CanopyClustering.hpp>
 #include <Log.hpp>
 
-Canopy* CanopyClusteringAlg::create_canopy(Point* origin, boost::unordered_set<Point*>& marked_points, std::vector<std::pair<Point*,bool> >& points, double min_neighbour_dist, double min_close_dist, bool sets_close_points){
+Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double min_neighbour_dist, double min_close_dist, bool set_close_points){
 
     std::vector<Point*> neighbours;
 
-    if(sets_close_points){
+    if(set_close_points){
+        //Go through all points and set the close points to contain the ones that are "close"
+        close_points.clear();//Will not reallocate
+        close_points.push_back(origin);
         for(int i=0; i<points.size(); i++){
 
-            Point* potential_neighbour = points[i].first;
+            Point* potential_neighbour = points[i];
             double dist = get_distance_between_points(origin, potential_neighbour);
 
             if(dist < min_close_dist){
 
-                points[i].second = true;
+                close_points.push_back(potential_neighbour);
 
                 if(dist < min_neighbour_dist){
+
                     neighbours.push_back(potential_neighbour);
+
                 }
-            } else {
-                points[i].second = false;
-            }
+            } 
         }
     } else {
-        for(int i=0; i<points.size(); i++){
-            Point* potential_neighbour = points[i].first;
-            if(points[i].second){
-                double dist = get_distance_between_points(origin, potential_neighbour);
-                if(dist < min_neighbour_dist){
-                    neighbours.push_back(potential_neighbour);
-                }
+
+        for(int i=0; i<close_points.size(); i++){
+
+            Point* potential_neighbour = close_points[i];
+            double dist = get_distance_between_points(origin, potential_neighbour);
+
+            if(dist < min_neighbour_dist){
+                neighbours.push_back(potential_neighbour);
             }
         }
+
     }
+    //_log(logINFO) << "Close points size: " << close_points.size() << " neighbours: " << neighbours.size();
 
     neighbours.push_back(origin);
 
@@ -90,12 +96,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vector<Point*>& original_points){
-
-    std::vector<std::pair<Point*,bool> > points;
-    BOOST_FOREACH(Point* p, original_points)
-        points.push_back(make_pair(p,false));
-
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vector<Point*>& points){
 
     int num_threads = 4;
     omp_set_num_threads(num_threads);
@@ -111,10 +112,13 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
     //TODO: ensure it is actually random
     //std::random_shuffle(points.begin(), points.end());
 
-    //TODO: this will be super slow!
+    //TODO: this may be super slow!
     boost::unordered_set<Point*> marked_points;
 
     std::vector<Canopy*> canopy_vector;
+
+    vector<Point*> close_points;
+    close_points.reserve(points.size());
 
     //
     //Create canopies
@@ -122,28 +126,25 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
         
     int num_canopy_jumps = 0;
 
-#pragma omp parallel for shared(marked_points, points, canopy_vector, num_canopy_jumps) schedule(dynamic)
+
+#pragma omp parallel for shared(marked_points, points, canopy_vector, num_canopy_jumps) firstprivate(close_points, min_canopy_dist, min_close_dist, canopy_merge_distance_threshold, canopy_iteration_min_dist) schedule(dynamic)
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
-        Point* origin = points[origin_i].first; 
+        Point* origin = points[origin_i]; 
 
         if(marked_points.find(origin) != marked_points.end())
             continue;
-        else
-            marked_points.insert(origin);
 
         _log(logINFO) << "Unmarked points count: " << points.size() - marked_points.size() << " Marked points count: " << marked_points.size();
         _log(logINFO) << "points.size: " << points.size() << " origin_i: " << origin_i << " origin->id: " << origin->id ;
 
         _log(logDEBUG2) << "Current canopy origin: " << origin->id;
 
-        vector<Point*> close_points;
-
         Canopy *c1;
         Canopy *c2;
 
-        c1 = create_canopy(origin, marked_points, points, min_canopy_dist, min_close_dist, true);
+        c1 = create_canopy(origin, points, close_points, min_canopy_dist, min_close_dist, true);
 
-        c2 = create_canopy(c1->center, marked_points, points, min_canopy_dist, min_close_dist, false);
+        c2 = create_canopy(c1->center, points, close_points, min_canopy_dist, min_close_dist, false);
 
         double dist = get_distance_between_points(c1->center, c2->center);
 
@@ -162,9 +163,10 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
             delete c1;
             c1=c2;
 
+#pragma omp atomic
             num_canopy_jumps++;
 
-            c2=create_canopy(c1->center, marked_points, points, min_canopy_dist, min_close_dist, false);
+            c2=create_canopy(c1->center, points, close_points, min_canopy_dist, min_close_dist, false);
             dist = get_distance_between_points(c1->center, c2->center); 
             _log(logDEBUG3) << *c1;
             _log(logDEBUG3) << *c2;
@@ -175,15 +177,22 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
 #pragma omp critical
         {
-            canopy_vector.push_back(c1);
+            //Do not commit anything if by chance another thread marked the current origin
+            if(marked_points.find(origin) == marked_points.end()){
+                marked_points.insert(origin);
 
-            BOOST_FOREACH(Point* n, c1->neighbours){
-                marked_points.insert(n);
+                canopy_vector.push_back(c1);
+
+                BOOST_FOREACH(Point* n, c1->neighbours){
+                    marked_points.insert(n);
+                }
+                //TODO: Could be done better
+                if(c1->origin->id != "!GENERATED!"){
+                    marked_points.insert(c1->origin);
+                }
+
             }
-            //TODO: Could be done better
-            if(c1->origin->id != "!GENERATED!"){
-                marked_points.insert(c1->origin);
-            }
+
         }
 
     }
