@@ -121,7 +121,7 @@ void verify_proper_point_input_or_die(const std::vector<Point*>& points){
 double get_distance_between_points(const Point* p1, const Point* p2){
 
     int len = p1->num_data_samples;
-    double dist = pearsoncorr_from_precomputed(len, p1->sample_data_pearson_precomputed, p2->sample_data_pearson_precomputed);
+    double dist = 1 - fabs(pearsoncorr_from_precomputed(len, p1->sample_data_pearson_precomputed, p2->sample_data_pearson_precomputed));
 
     //if(log_level >= logDEBUG3){
     //    _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
