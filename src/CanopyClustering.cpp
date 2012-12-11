@@ -91,7 +91,6 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
     //
     //Create canopies
     //
-    //BOOST_FOREACH(Point* origin, points){
 
 #pragma omp parallel for shared(marked_points, points, canopy_vector) schedule(dynamic)
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
@@ -157,16 +156,10 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
     }
 
+    _log(logINFO) << "Number of canopies before merging: " << canopy_vector.size();
+
     std::vector<Canopy*> merged_canopy_vector;
 
-    //Merge canopies
-    //
-    //The basic idea:
-    //1. We pick one canopy c from the canopy vector (canopy with index 0)
-    //2. We go through remaining canopies in that vector
-    //3. If any of the remaining canopies is closer to c than threshold
-    //4. We 
-    
     _log(logDEBUG1) << "############Merging canopies############";
     while(canopy_vector.size()){
         bool any_canopy_merged = false;
@@ -252,6 +245,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
             canopy_vector.erase(canopy_vector.begin());
         }
     }
+
+    _log(logINFO) << "Number of canopies after merging: " << merged_canopy_vector.size();
+
     return merged_canopy_vector;
 
 }

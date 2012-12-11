@@ -97,15 +97,6 @@ int main(int argc, const char* argv[])
     /* drop the file from memory*/
     munmap(point_file_mmap, statbuf.st_size);
     
-    //stream<mapped_file_source> point_input_file;
-    //point_input_file.open(command_line_variable_map["point_input_file"].as<string>());
-
-    //string line;
-    //getline(point_input_file, line);//Ignore first line
-    //while(getline(point_input_file, line)){
-    //    points.push_back(new Point(line.c_str()));
-    //}
-    //exit(1);
 
     verify_proper_point_input_or_die(points);
     filter_out_input_points(points);
@@ -118,7 +109,7 @@ int main(int argc, const char* argv[])
     //Run Canopy Clustering
     //
     std::vector<Canopy*> canopies;
-    //canopies = CanopyClusteringAlg::single_core_run_clustering_on(points);
+
     canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points);
     
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
