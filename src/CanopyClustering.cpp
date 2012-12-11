@@ -8,25 +8,33 @@
 #include <CanopyClustering.hpp>
 #include <Log.hpp>
 
-Canopy* CanopyClusteringAlg::create_canopy(Point* origin, boost::unordered_set<Point*>& marked_points, std::vector<Point*>& points, double min_neighbour_dist, std::vector<Point*>& close_points, double min_close_dist){
+Canopy* CanopyClusteringAlg::create_canopy(Point* origin, boost::unordered_set<Point*>& marked_points, std::vector<std::pair<Point*,bool> >& points, double min_neighbour_dist, double min_close_dist, bool sets_close_points){
 
     std::vector<Point*> neighbours;
 
-    if(close_points.size()){
-        BOOST_FOREACH(Point* potential_neighbour, close_points){
+    if(sets_close_points){
+        for(int i=0; i<points.size(); i++){
+
+            Point* potential_neighbour = points[i].first;
             double dist = get_distance_between_points(origin, potential_neighbour);
-            if(dist < min_neighbour_dist){
-                neighbours.push_back(potential_neighbour);
+
+            if(dist < min_close_dist){
+
+                points[i].second = true;
+
+                if(dist < min_neighbour_dist){
+                    neighbours.push_back(potential_neighbour);
+                }
+            } else {
+                points[i].second = false;
             }
         }
     } else {
-        BOOST_FOREACH(Point* potential_neighbour, points){
-            double dist = get_distance_between_points(origin, potential_neighbour);
-            if(dist > min_close_dist){
-
-                close_points.push_back(potential_neighbour);
-
-                if(dist > min_neighbour_dist){
+        for(int i=0; i<points.size(); i++){
+            Point* potential_neighbour = points[i].first;
+            if(points[i].second){
+                double dist = get_distance_between_points(origin, potential_neighbour);
+                if(dist < min_neighbour_dist){
                     neighbours.push_back(potential_neighbour);
                 }
             }
@@ -82,7 +90,12 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vector<Point*>& points){
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vector<Point*>& original_points){
+
+    std::vector<std::pair<Point*,bool> > points;
+    BOOST_FOREACH(Point* p, original_points)
+        points.push_back(make_pair(p,false));
+
 
     int num_threads = 4;
     omp_set_num_threads(num_threads);
@@ -111,7 +124,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
 #pragma omp parallel for shared(marked_points, points, canopy_vector, num_canopy_jumps) schedule(dynamic)
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
-        Point* origin = points[origin_i]; 
+        Point* origin = points[origin_i].first; 
 
         if(marked_points.find(origin) != marked_points.end())
             continue;
@@ -128,9 +141,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
         Canopy *c1;
         Canopy *c2;
 
-        c1 = create_canopy(origin, marked_points, points, min_canopy_dist, close_points, min_close_dist);
+        c1 = create_canopy(origin, marked_points, points, min_canopy_dist, min_close_dist, true);
 
-        c2 = create_canopy(c1->center, marked_points, points, min_canopy_dist, close_points, min_close_dist);
+        c2 = create_canopy(c1->center, marked_points, points, min_canopy_dist, min_close_dist, false);
 
         double dist = get_distance_between_points(c1->center, c2->center);
 
@@ -151,7 +164,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
             num_canopy_jumps++;
 
-            c2=create_canopy(c1->center, marked_points, points, min_canopy_dist, close_points, min_close_dist);
+            c2=create_canopy(c1->center, marked_points, points, min_canopy_dist, min_close_dist, false);
             dist = get_distance_between_points(c1->center, c2->center); 
             _log(logDEBUG3) << *c1;
             _log(logDEBUG3) << *c2;
