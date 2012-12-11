@@ -173,7 +173,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
             _log(logDEBUG3) << "distance: " << dist;
         }
 
-        //cout << "Num canopy jumps: " << i << endl;
+        //Now we know that c1 and c2 are close enough and we should choose the one that has more neighbours
+
+        Canopy* final_canopy = c1->neighbours.size() > c2->neighbours.size() ? c1 : c2;
 
 #pragma omp critical
         {
@@ -181,13 +183,13 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
             if(marked_points.find(origin) == marked_points.end()){
                 marked_points.insert(origin);
 
-                canopy_vector.push_back(c1);
+                canopy_vector.push_back(final_canopy);
 
                 BOOST_FOREACH(Point* n, c1->neighbours){
                     marked_points.insert(n);
                 }
                 //TODO: Could be done better
-                if(c1->origin->id != "!GENERATED!"){
+                if(final_canopy->origin->id != "!GENERATED!"){
                     marked_points.insert(c1->origin);
                 }
 
