@@ -101,7 +101,7 @@ bool Point::check_if_single_point_proportion_is_smaller_than(double x){
     return (max_data_sample / sum_data_samples) < x;
 }
 
-void Point::verify_proper_point_input_or_die(const std::vector<Point*>& points){
+void verify_proper_point_input_or_die(const std::vector<Point*>& points){
     
     //Verify all points have the same number of samples
     int num_samples = points[0]->num_data_samples;
@@ -118,7 +118,7 @@ void Point::verify_proper_point_input_or_die(const std::vector<Point*>& points){
 
 }
 
-double Point::get_distance_between_points(const Point* p1, const Point* p2){
+double get_distance_between_points(const Point* p1, const Point* p2){
 
     int len = p1->num_data_samples;
     double dist = pearsoncorr_from_precomputed(len, p1->sample_data_pearson_precomputed, p2->sample_data_pearson_precomputed);
@@ -139,7 +139,7 @@ double Point::get_distance_between_points(const Point* p1, const Point* p2){
     return dist; 
 }
 
-Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
+Point* get_centroid_of_points(const std::vector<Point*>& points){
 
     //TODO: median should be estimated using boost/accumulators/statistics/median.hpp
 
@@ -185,7 +185,7 @@ Point* Point::get_centroid_of_points(const std::vector<Point*>& points){
     return centroid;
 }
 
-void Point::filter_out_input_points(std::vector<Point*>& points){
+void filter_out_input_points(std::vector<Point*>& points){
 
     //TODO: make a parameter
     int min_non_zero_data_samples = 3;

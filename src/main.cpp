@@ -107,8 +107,8 @@ int main(int argc, const char* argv[])
     //}
     //exit(1);
 
-    Point::verify_proper_point_input_or_die(points);
-    Point::filter_out_input_points(points);
+    verify_proper_point_input_or_die(points);
+    filter_out_input_points(points);
 
 
     _log(logINFO) << "Finished reading point input file";
