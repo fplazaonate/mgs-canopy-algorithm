@@ -127,7 +127,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
     int num_canopy_jumps = 0;
 
 
-#pragma omp parallel for shared(marked_points, points, canopy_vector, num_canopy_jumps) firstprivate(close_points, min_canopy_dist, min_close_dist, canopy_merge_distance_threshold, canopy_iteration_min_dist) schedule(dynamic)
+#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps) firstprivate(close_points, min_canopy_dist, min_close_dist, canopy_merge_distance_threshold, canopy_iteration_min_dist) schedule(dynamic)
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
         Point* origin = points[origin_i]; 
 
