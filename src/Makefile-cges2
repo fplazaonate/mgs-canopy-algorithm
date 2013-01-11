@@ -22,7 +22,7 @@ ADDITIONAL_OPTS = -O3 -msse4.2
 
 INCLUDES = -I./ -I/tools/boost/include/ #Add path to local boost here if needed
 
-LIBS =  -lboost_program_options-mt -L./ -L/tools/boost/lib/
+LIBS =  -lboost_program_options -L./ -L/tools/boost/lib/
 
 ADDITIONAL_FILES_TO_BE_DELETED = 
 
