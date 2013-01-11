@@ -21,11 +21,9 @@ endif
 #ADDITIONAL_OPTS = -p -g 
 ADDITIONAL_OPTS = -O3 -msse4.2 
 
-ALGLIB_PATH = ../lib/alglib/src/
+INCLUDES = -I./ -I/opt/local/include #Add path to local boost here if needed
 
-INCLUDES = -I./ -I../lib/alglib/src/ -I/opt/local/include #Add path to local boost here if needed
-
-LIBS =  -lboost_program_options-mt -lboost_iostreams-mt -L../lib/alglib/src/  -L./ -L/opt/local/lib/
+LIBS =  -lboost_program_options-mt -lboost_iostreams-mt  -L./ -L/opt/local/lib/ 
 
 ADDITIONAL_FILES_TO_BE_DELETED = 
 
