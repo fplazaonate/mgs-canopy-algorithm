@@ -78,6 +78,9 @@ int main(int argc, const char* argv[])
     /* mmap the input file */
     point_file_mmap = (char*)mmap (0, statbuf.st_size, PROT_WRITE, MAP_PRIVATE, point_file, 0);
 
+    _log(logINFO) << "File loaded into memory, generating points";
+
+
     char* line_start_ptr = point_file_mmap;
     char* line_end_ptr = point_file_mmap;
     char* mmap_end_ptr = point_file_mmap + statbuf.st_size;
@@ -94,15 +97,22 @@ int main(int argc, const char* argv[])
         line_start_ptr = ++line_end_ptr;
     }
 
+    _log(logINFO) << "Points read, dropping file from memory";
+
     /* drop the file from memory*/
     munmap(point_file_mmap, statbuf.st_size);
     
+    _log(logINFO) << "Running basic validation of points";
 
     verify_proper_point_input_or_die(points);
+
+    _log(logINFO) << "Filtering points";
+
     filter_out_input_points(points);
 
 
-    _log(logINFO) << "Finished reading point input file";
+    _log(logINFO) << "Finished input points processing";
+    
     _log(logINFO) << "Number of points read: " << points.size();
     
     //
