@@ -22,7 +22,8 @@ ADDITIONAL_OPTS = -O3 -msse4.2
 
 INCLUDES = -I./ -I/tools/boost/include/ #Add path to local boost here if needed
 
-LIBS =  -lboost_program_options -L./ -L/tools/boost/lib/
+LIBS =  -L./ -L/tools/boost/lib/ -Wl,-Bstatic -lboost_program_options  -Wl,-Bdynamic
+#LIBS =  -L./ -L/tools/boost/lib/ -lboost_program_options 
 
 ADDITIONAL_FILES_TO_BE_DELETED = 
 
@@ -33,10 +34,10 @@ ADDITIONAL_FILES_TO_BE_DELETED =
 ### EXECUTABLE
 
 $(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o 
-	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $(LIBS) $^
+	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $^ $(LIBS) 
 
 $(TEST_EXECUTABLE_NAME): main_test.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o 
-	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $(LIBS) $^
+	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $^ $(LIBS) 
 
 main.o:	main.cpp 
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
