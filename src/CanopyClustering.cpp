@@ -39,7 +39,8 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
             Point* potential_neighbour = close_points[i];
             double dist = get_distance_between_points(origin, potential_neighbour);
 
-            if(dist < min_neighbour_dist){
+            //TODO: get rid of this hack
+            if((dist < min_neighbour_dist) && (potential_neighbour->id != "!GENERATED!")){
                 neighbours.push_back(potential_neighbour);
             }
         }
