@@ -40,7 +40,7 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
             double dist = get_distance_between_points(origin, potential_neighbour);
 
             //TODO: get rid of this hack
-            if((dist < min_neighbour_dist) && (potential_neighbour->id != "!GENERATED!")){
+            if((dist < min_neighbour_dist) && (!potential_neighbour->id.compare("!GENERATED!"))){
                 neighbours.push_back(potential_neighbour);
             }
         }
@@ -190,7 +190,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
                     marked_points.insert(n);
                 }
                 //TODO: Could be done better
-                if(final_canopy->origin->id != "!GENERATED!"){
+                if(!(final_canopy->origin->id.compare("!GENERATED!"))){
                     marked_points.insert(c1->origin);
                 }
 
