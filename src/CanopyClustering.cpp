@@ -98,7 +98,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vector<Point*>& points){
 
-    int num_threads = 4;
+    int num_threads = 16;
     omp_set_num_threads(num_threads);
 
 
