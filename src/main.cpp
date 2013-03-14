@@ -49,7 +49,7 @@ void verify_input_correctness(const options_description& command_line_desc, cons
     }
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     //
     //Initialization
