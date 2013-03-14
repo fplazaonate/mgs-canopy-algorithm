@@ -28,6 +28,20 @@ void verify_input_correctness(const options_description& command_line_desc, cons
         cout << command_line_desc << "\n";
         exit(1);
     }
+         
+    double max_canopy_dist = command_line_variable_map["max_canopy_dist"].as<double>();
+    double max_close_dist = command_line_variable_map["max_close_dist"].as<double>();
+    double max_merge_dist = command_line_variable_map["max_merge_dist"].as<double>();
+    double max_step_dist = command_line_variable_map["max_step_dist"].as<double>();
+
+    if( max_canopy_dist < 0 || max_canopy_dist > 1 || 
+        max_close_dist < 0 || max_close_dist > 1 ||
+        max_merge_dist < 0 || max_merge_dist > 1 ||
+        max_step_dist < 0 || max_step_dist > 1 
+      ){
+        cout << "Distance values must be a number within range <0,1>" << endl;
+        exit(1);
+    }
 
     if (command_line_variable_map.count("point_input_file") != 1 ){
         cout << "Incorrect specification of point input file path!" << endl;
@@ -35,18 +49,32 @@ void verify_input_correctness(const options_description& command_line_desc, cons
     }
 }
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
-    //log_level = logDEBUG4;
+    //
+    //Initialization
+    //
+    
+    //Set logging level
     log_level = logINFO;
-    //
-    //Parse input options
-    //
+
+    //Prepare variables for command line input
+    double max_canopy_dist;
+    double max_close_dist;
+    double max_merge_dist;
+    double max_step_dist;
+    string point_input_file;
+
+    //Define and read command line options
     options_description command_line_desc("Allowed options");
 
     command_line_desc.add_options()
         ("help", "write help message")
-        ("point_input_file", value<string>(), "Point input file");
+        ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1), "Max distance between a canopy center and a point in which the point belongs to the canopy")
+        ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4), "Max distance between a canopy center and a point in which the point will be considered close to the canopy")
+        ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.03), "Max distance between two canopy centers in which the canopies should be merged")
+        ("max_step_dist", value<double>(&max_step_dist)->default_value(0.1), "Max distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy")
+        ("point_input_file", value<string>(&point_input_file), "Point input file");
 
     positional_options_description command_line_positional_desc;
 
@@ -56,7 +84,7 @@ int main(int argc, char* argv[])
     store(command_line_parser(argc,argv).options(command_line_desc).positional(command_line_positional_desc).run(), command_line_variable_map);
     notify(command_line_variable_map);
 
-    //Verify input correctness
+    //Verify command line input parameters
     verify_input_correctness(command_line_desc, command_line_variable_map);
 
 
@@ -70,7 +98,7 @@ int main(int argc, char* argv[])
     struct stat statbuf;
 
     /* open the input file */
-    point_file = open(command_line_variable_map["point_input_file"].as<string>().c_str(), O_RDONLY);
+    point_file = open(point_input_file.c_str(), O_RDONLY);
 
     /* find size of input file */
     fstat(point_file,&statbuf);
@@ -120,7 +148,7 @@ int main(int argc, char* argv[])
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points, max_canopy_dist, max_close_dist, max_merge_dist, max_step_dist);
     
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 

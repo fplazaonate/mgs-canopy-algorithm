@@ -8,7 +8,7 @@
 #include <CanopyClustering.hpp>
 #include <Log.hpp>
 
-Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double min_neighbour_dist, double min_close_dist, bool set_close_points){
+Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_neighbour_dist, double max_close_dist, bool set_close_points){
 
     std::vector<Point*> neighbours;
 
@@ -21,11 +21,11 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
             Point* potential_neighbour = points[i];
             double dist = get_distance_between_points(origin, potential_neighbour);
 
-            if(dist < min_close_dist){
+            if(dist < max_close_dist){
 
                 close_points.push_back(potential_neighbour);
 
-                if(dist < min_neighbour_dist){
+                if(dist < max_neighbour_dist){
 
                     neighbours.push_back(potential_neighbour);
 
@@ -40,7 +40,7 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
             double dist = get_distance_between_points(origin, potential_neighbour);
 
             //TODO: get rid of this hack
-            if((dist < min_neighbour_dist) && (!potential_neighbour->id.compare("!GENERATED!"))){
+            if((dist < max_neighbour_dist) && (!potential_neighbour->id.compare("!GENERATED!"))){
                 neighbours.push_back(potential_neighbour);
             }
         }
@@ -97,18 +97,23 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vector<Point*>& points){
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, double max_canopy_dist, double max_close_dist, double max_merge_dist, double max_step_dist){
 
     int num_threads = 16;
     omp_set_num_threads(num_threads);
 
 
     _log(logDEBUG1) << "############Creating Canopies############";
+    _log(logDEBUG1) << "Parameters:";
+    _log(logDEBUG1) << "max_canopy_dist:\t " << max_canopy_dist;
+    _log(logDEBUG1) << "max_close_dist:\t " << max_close_dist;
+    _log(logDEBUG1) << "max_merge_dist:\t " << max_merge_dist;
+    _log(logDEBUG1) << "max_step_dist:\t " << max_step_dist;
 
-    double min_canopy_dist = 0.1;
-    double min_close_dist = 0.4;
-    double canopy_merge_distance_threshold = 0.03;
-    double canopy_iteration_min_dist = 0.1;
+    //double max_canopy_dist = 0.1;
+    //double max_close_dist = 0.4;
+    //double max_merge_dist = 0.03;
+    //double max_step_dist = 0.1;
 
     //TODO: ensure it is actually random
     //std::random_shuffle(points.begin(), points.end());
@@ -127,11 +132,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
         
     int num_canopy_jumps = 0;
 
-    double clustering_stop_ratio = 0.4;
-    int clustering_stop_point_num =  (points.size() * clustering_stop_ratio);
 
-#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps) firstprivate(close_points, min_canopy_dist, min_close_dist, canopy_merge_distance_threshold, canopy_iteration_min_dist) schedule(dynamic)
-    for(int origin_i = 0; origin_i < clustering_stop_point_num; origin_i++){
+#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, max_step_dist) schedule(dynamic)
+    for(int origin_i = 0; origin_i < points.size(); origin_i++){
         Point* origin = points[origin_i]; 
 
         if(marked_points.find(origin) != marked_points.end())
@@ -145,9 +148,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
         Canopy *c1;
         Canopy *c2;
 
-        c1 = create_canopy(origin, points, close_points, min_canopy_dist, min_close_dist, true);
+        c1 = create_canopy(origin, points, close_points, max_canopy_dist, max_close_dist, true);
 
-        c2 = create_canopy(c1->center, points, close_points, min_canopy_dist, min_close_dist, false);
+        c2 = create_canopy(c1->center, points, close_points, max_canopy_dist, max_close_dist, false);
 
         double dist = get_distance_between_points(c1->center, c2->center);
 
@@ -162,14 +165,14 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
         //cout << "First potential jump correlation: " << correlation << endl;
         
 
-        while(dist > canopy_iteration_min_dist){
+        while(dist > max_step_dist){
             delete c1;
             c1=c2;
 
 #pragma omp atomic
             num_canopy_jumps++;
 
-            c2=create_canopy(c1->center, points, close_points, min_canopy_dist, min_close_dist, false);
+            c2=create_canopy(c1->center, points, close_points, max_canopy_dist, max_close_dist, false);
             dist = get_distance_between_points(c1->center, c2->center); 
             _log(logDEBUG3) << *c1;
             _log(logDEBUG3) << *c2;
@@ -231,7 +234,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(std::vect
 
             _log(logDEBUG3) << "Distance: " << dist;
 
-            if(dist < canopy_merge_distance_threshold){
+            if(dist < max_merge_dist){
 #pragma omp critical
                 {
                     canopies_to_be_merged_index_vector.push_back(i);
