@@ -23,12 +23,13 @@ using namespace std;
 using namespace boost::program_options;
 
 
-void verify_input_correctness(const options_description& command_line_desc, const variables_map& command_line_variable_map){
+void verify_input_correctness(const options_description& all_options_desc, const variables_map& command_line_variable_map){
     if (command_line_variable_map.count("help")) {
-        cout << command_line_desc << "\n";
+        cout << all_options_desc<< "\n";
         exit(1);
     }
          
+    int num_threads = command_line_variable_map["num_threads"].as<int>();
     double max_canopy_dist = command_line_variable_map["max_canopy_dist"].as<double>();
     double max_close_dist = command_line_variable_map["max_close_dist"].as<double>();
     double max_merge_dist = command_line_variable_map["max_merge_dist"].as<double>();
@@ -42,6 +43,15 @@ void verify_input_correctness(const options_description& command_line_desc, cons
       ){
         cout << "Distance values must be a number within range <0,1>" << endl;
         exit(1);
+    }
+
+    if(num_threads < 1){
+        cout << "Number of threads is the number of logical cpus you can utilize for the job, as shown by /proc/cpuinfo, it must be at least one" << endl;
+
+    }
+
+    if(num_threads > 999){
+        cout << "if you really have more than 999 threads available... well congratulations - you need to recompile this program" << endl; 
     }
 
     if(verbosity != "error" && verbosity != "progress" && verbosity != "warn" && verbosity != "info" && verbosity != "debug" && verbosity != "debug1"){
@@ -65,34 +75,55 @@ int main(int argc, char* argv[])
     log_level = logINFO;
 
     //Prepare variables for command line input
+    int num_threads;
     double max_canopy_dist;
     double max_close_dist;
     double max_merge_dist;
     double max_step_dist;
     string verbosity_option;
     string point_input_file;
+    int min_num_non_zero_medians;
+    double max_single_data_point_proportion;
 
     //Define and read command line options
-    options_description command_line_desc("Allowed options");
+    options_description all_options_desc("Allowed options");
+    options_description general_options_desc("General");
+    options_description algorithm_param_options_desc("Algorithm Parameters");
+    options_description filter_options_desc("Output filter parameters");
+    //options_description early_stop_options_desc("Early stopping");
+    options_description misc_options_desc("Miscellaneous");
 
-    command_line_desc.add_options()
-        ("help", "write help message")
-        ("verbosity,v", value<string>(&verbosity_option)->default_value("progress"), "Control how much information should be printed to the scree. Available levels according to their verbosity: error, progress, warn, info, debug, debug1.")
+
+    general_options_desc.add_options()
+        ("point_input_file", value<string>(&point_input_file), "Point input file")
+        ("num_threads", value<int>(&num_threads)->default_value(4), "IMPORTANT! Number of cpu threads to use.")
+        ("verbosity,v", value<string>(&verbosity_option)->default_value("progress"), "Control how much information should be printed to the scree. Available levels according to their verbosity: error, progress, warn, info, debug, debug1.");
+
+    algorithm_param_options_desc.add_options()
         ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1), "Max distance between a canopy center and a point in which the point belongs to the canopy")
         ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4), "Max distance between a canopy center and a point in which the point will be considered close to the canopy")
         ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.03), "Max distance between two canopy centers in which the canopies should be merged")
-        ("max_step_dist", value<double>(&max_step_dist)->default_value(0.1), "Max distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy")
-        ("point_input_file", value<string>(&point_input_file), "Point input file");
+        ("max_step_dist", value<double>(&max_step_dist)->default_value(0.1), "Max distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy");
+
+    filter_options_desc.add_options()
+        ("filter_zero_medians", value<int>(&min_num_non_zero_medians)->default_value(4), "Return only those canopies that have at least N non-zero medians. Setting it to 0 will disable the filter.")
+        ("filter_single_point", value<double>(&max_single_data_point_proportion)->default_value(0.9), "Don't return canopies containing a single median which divided by sum of all its medians is greater than X. Setting it to 1 disables the filter.");
+
+
+    misc_options_desc.add_options()
+        ("help", "write help message");
+
+    all_options_desc.add(general_options_desc).add(algorithm_param_options_desc).add(filter_options_desc).add(misc_options_desc);
 
     positional_options_description command_line_positional_desc;
     command_line_positional_desc.add("point_input_file",-1);
 
     variables_map command_line_variable_map;
-    store(command_line_parser(argc,argv).options(command_line_desc).positional(command_line_positional_desc).run(), command_line_variable_map);
+    store(command_line_parser(argc,argv).options(all_options_desc).positional(command_line_positional_desc).run(), command_line_variable_map);
     notify(command_line_variable_map);
 
     //Verify command line input parameters
-    verify_input_correctness(command_line_desc, command_line_variable_map);
+    verify_input_correctness(all_options_desc, command_line_variable_map);
 
 
     //
@@ -173,19 +204,24 @@ int main(int argc, char* argv[])
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points, max_canopy_dist, max_close_dist, max_merge_dist, max_step_dist);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, max_step_dist);
     
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 
-    CanopyClusteringAlg::filter_clusters_by_zero_medians(4, canopies);
-
-    _log(logINFO) << "Finished filtering by medians, number of canopies:" << canopies.size();
-
-    CanopyClusteringAlg::filter_clusters_by_single_point_skew(0.9, canopies);
-
-    _log(logINFO) << "Finished filtering by single data point proportion, number of canopies:" << canopies.size();
-
+    //
     //Filter out canopies
+    //
+    if(min_num_non_zero_medians){
+        CanopyClusteringAlg::filter_clusters_by_zero_medians(min_num_non_zero_medians, canopies);
+        _log(logINFO) << "Finished filtering by medians, number of canopies:" << canopies.size();
+    }
+
+
+    if(max_single_data_point_proportion < 0.99999){
+        CanopyClusteringAlg::filter_clusters_by_single_point_skew(max_single_data_point_proportion, canopies);
+        _log(logINFO) << "Finished filtering by single data point proportion, number of canopies:" << canopies.size();
+    }
+
 
     //cout << "####################Results####################" << endl;
     //cout << "####################Results####################" << endl;

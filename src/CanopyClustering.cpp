@@ -97,11 +97,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, double max_canopy_dist, double max_close_dist, double max_merge_dist, double max_step_dist){
-
-    int num_threads = 16;
-    omp_set_num_threads(num_threads);
-
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double max_step_dist){
 
     _log(logINFO) << "############Creating Canopies############";
     _log(logINFO) << "Parameters:";
