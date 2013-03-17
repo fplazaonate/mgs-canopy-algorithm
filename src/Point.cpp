@@ -185,10 +185,7 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
     return centroid;
 }
 
-void filter_out_input_points(std::vector<Point*>& points){
-
-    //TODO: make a parameter
-    int min_non_zero_data_samples = 3;
+void filter_out_input_points(std::vector<Point*>& points, int min_non_zero_data_samples){
 
     int num_points = points.size();
     int num_data_samples = points[0]->num_data_samples;
