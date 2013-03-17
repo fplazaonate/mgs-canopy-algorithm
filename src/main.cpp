@@ -84,13 +84,15 @@ int main(int argc, char* argv[])
     string point_input_file;
     int min_num_non_zero_medians;
     double max_single_data_point_proportion;
+    double stop_proportion_of_points;
+    int stop_num_single_point_clusters;
 
     //Define and read command line options
     options_description all_options_desc("Allowed options");
     options_description general_options_desc("General");
     options_description algorithm_param_options_desc("Algorithm Parameters");
     options_description filter_options_desc("Output filter parameters");
-    //options_description early_stop_options_desc("Early stopping");
+    options_description early_stop_options_desc("Early stopping");
     options_description misc_options_desc("Miscellaneous");
 
 
@@ -109,11 +111,14 @@ int main(int argc, char* argv[])
         ("filter_zero_medians", value<int>(&min_num_non_zero_medians)->default_value(4), "Return only those canopies that have at least N non-zero medians. Setting it to 0 will disable the filter.")
         ("filter_single_point", value<double>(&max_single_data_point_proportion)->default_value(0.9), "Don't return canopies containing a single median which divided by sum of all its medians is greater than X. Setting it to 1 disables the filter.");
 
+    early_stop_options_desc.add_options()
+        ("stop_on_proportion_of_points_clustered", value<double>(&stop_proportion_of_points)->default_value(0.5), "Stop clustering when X*total_number_of_points were clustered")
+        ("stop_on_num_single_point_clusters", value<int>(&stop_num_single_point_clusters)->default_value(1000), "Stop clustering when X consecutive clusters had only one point in them");
 
     misc_options_desc.add_options()
         ("help", "write help message");
 
-    all_options_desc.add(general_options_desc).add(algorithm_param_options_desc).add(filter_options_desc).add(misc_options_desc);
+    all_options_desc.add(general_options_desc).add(algorithm_param_options_desc).add(filter_options_desc).add(early_stop_options_desc).add(misc_options_desc);
 
     positional_options_description command_line_positional_desc;
     command_line_positional_desc.add("point_input_file",-1);
@@ -204,7 +209,7 @@ int main(int argc, char* argv[])
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, max_step_dist);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, max_step_dist, stop_proportion_of_points, stop_num_single_point_clusters);
     
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 

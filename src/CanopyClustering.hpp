@@ -9,7 +9,7 @@ using namespace std;
 class CanopyClusteringAlg{
     public:
         static std::vector<Canopy*> single_core_run_clustering_on(vector<Point*>& points);
-        static std::vector<Canopy*> multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double max_step_dist);
+        static std::vector<Canopy*> multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double max_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters);
         static Canopy* create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double min_neighbour_correlation, double min_close_correlation, bool sets_close_points);
 
         static void filter_clusters_by_zero_medians(int min_num_non_zero_medians, vector<Canopy*>& canopies_to_filter);

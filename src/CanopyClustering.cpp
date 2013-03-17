@@ -97,25 +97,28 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double max_step_dist){
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double max_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters){
 
-    _log(logINFO) << "############Creating Canopies############";
-    _log(logINFO) << "Parameters:";
+    _log(logPROGRESS) << "############Creating Canopies############";
+    _log(logINFO) << "General:";
+    _log(logINFO) << "num_threads:\t " << num_threads;
+    _log(logINFO) << "";
+    _log(logINFO) << "Algorithm Parameters:";
     _log(logINFO) << "max_canopy_dist:\t " << max_canopy_dist;
     _log(logINFO) << "max_close_dist:\t " << max_close_dist;
     _log(logINFO) << "max_merge_dist:\t " << max_merge_dist;
     _log(logINFO) << "max_step_dist:\t " << max_step_dist;
-
-    //double max_canopy_dist = 0.1;
-    //double max_close_dist = 0.4;
-    //double max_merge_dist = 0.03;
-    //double max_step_dist = 0.1;
+    _log(logINFO) << "";
+    _log(logINFO) << "Early stopping:";
+    _log(logINFO) << "stop_proportion_of_points:\t " << stop_proportion_of_points;
+    _log(logINFO) << "stop_num_single_point_clusters:\t " << stop_num_single_point_clusters;
 
     //TODO: ensure it is actually random
     //std::random_shuffle(points.begin(), points.end());
 
-    //TODO: this may be super slow!
-    boost::unordered_set<Point*> marked_points;
+    boost::unordered_set<Point*> marked_points;//Points that should not be investigated as origins
+    vector<unsigned int> canopy_size_per_origin_num;//Contains size of the canopy created from origin by it's number, so first origin gave canopy of size 5, second origin gave canopy of size 8 and so on
+    int num_of_consecutive_canopies_of_size_1 = 0;
 
     std::vector<Canopy*> canopy_vector;
 
@@ -129,17 +132,31 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     int num_canopy_jumps = 0;
 
 
-#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, max_step_dist) schedule(dynamic)
+#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps, canopy_size_per_origin_num, num_of_consecutive_canopies_of_size_1) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, max_step_dist) schedule(dynamic)
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
+
+        //Early stopping proportion of points
+        if(marked_points.size() > stop_proportion_of_points * points.size()){
+            continue;
+        }
+
+        if(num_of_consecutive_canopies_of_size_1 == stop_num_single_point_clusters){
+            continue;
+        }
+
+
+
         Point* origin = points[origin_i]; 
 
         if(marked_points.find(origin) != marked_points.end())
             continue;
 
-        _log(logDEBUG) << "Unmarked points count: " << points.size() - marked_points.size() << " Marked points count: " << marked_points.size();
-        _log(logDEBUG) << "points.size: " << points.size() << " origin_i: " << origin_i << " origin->id: " << origin->id ;
+        {
+            _log(logDEBUG) << "Unmarked points count: " << points.size() - marked_points.size() << " Marked points count: " << marked_points.size();
+            _log(logDEBUG) << "points.size: " << points.size() << " origin_i: " << origin_i << " origin->id: " << origin->id ;
 
-        _log(logDEBUG1) << "Current canopy origin: " << origin->id;
+            _log(logDEBUG1) << "Current canopy origin: " << origin->id;
+        }
 
         Canopy *c1;
         Canopy *c2;
@@ -150,15 +167,19 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
         double dist = get_distance_between_points(c1->center, c2->center);
 
-        _log(logDEBUG2) << *c1;
-        _log(logDEBUG2) << *c2;
-        _log(logDEBUG2) << "dist: " << dist;
+        {
+            _log(logDEBUG2) << *c1;
+            _log(logDEBUG2) << *c2;
+            _log(logDEBUG2) << "dist: " << dist;
+        }
 
-        //cout << "Point1:" << endl;
-        //cout << *c1 << endl;
-        //cout << "Point2:" << endl;
-        //cout << *c2 << endl;
-        //cout << "First potential jump correlation: " << correlation << endl;
+        {
+            _log(logDEBUG3) << "Point1:" ;
+            _log(logDEBUG3) << *c1 ;
+            _log(logDEBUG3) << "Point2:" ;
+            _log(logDEBUG3) << *c2 ;
+            _log(logDEBUG3) << "First potential jump correlation: " << dist;
+        }
         
 
         while(dist > max_step_dist){
@@ -183,6 +204,8 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         {
             //Do not commit anything if by chance another thread marked the current origin
             if(marked_points.find(origin) == marked_points.end()){
+
+                //Add canopy
                 marked_points.insert(origin);
 
                 canopy_vector.push_back(final_canopy);
@@ -190,10 +213,24 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
                 BOOST_FOREACH(Point* n, c1->neighbours){
                     marked_points.insert(n);
                 }
+
                 //TODO: Could be done better
                 if(!(final_canopy->origin->id.compare("!GENERATED!"))){
                     marked_points.insert(c1->origin);
                 }
+
+                //Early stopping by number of number of consecutive canopies of size 1
+                if(final_canopy->neighbours.size() == 1)
+                    num_of_consecutive_canopies_of_size_1++;
+                else
+                    num_of_consecutive_canopies_of_size_1 = 0;
+
+                if(num_of_consecutive_canopies_of_size_1 >= stop_num_single_point_clusters){
+                    _log(logINFO) << "Reached " << num_of_consecutive_canopies_of_size_1  << " of consecutive canopies of size 1. Stopping.";
+                }
+
+                //Statistics showing size of canopies per analyzed origin
+                canopy_size_per_origin_num.push_back(final_canopy->neighbours.size());
 
             }
 
@@ -206,7 +243,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
     std::vector<Canopy*> merged_canopy_vector;
 
-    _log(logDEBUG1) << "############Merging canopies############";
+    _log(logPROGRESS) << "############Merging canopies############";
     while(canopy_vector.size()){
         bool any_canopy_merged = false;
 
