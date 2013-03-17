@@ -103,12 +103,12 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     omp_set_num_threads(num_threads);
 
 
-    _log(logDEBUG1) << "############Creating Canopies############";
-    _log(logDEBUG1) << "Parameters:";
-    _log(logDEBUG1) << "max_canopy_dist:\t " << max_canopy_dist;
-    _log(logDEBUG1) << "max_close_dist:\t " << max_close_dist;
-    _log(logDEBUG1) << "max_merge_dist:\t " << max_merge_dist;
-    _log(logDEBUG1) << "max_step_dist:\t " << max_step_dist;
+    _log(logINFO) << "############Creating Canopies############";
+    _log(logINFO) << "Parameters:";
+    _log(logINFO) << "max_canopy_dist:\t " << max_canopy_dist;
+    _log(logINFO) << "max_close_dist:\t " << max_close_dist;
+    _log(logINFO) << "max_merge_dist:\t " << max_merge_dist;
+    _log(logINFO) << "max_step_dist:\t " << max_step_dist;
 
     //double max_canopy_dist = 0.1;
     //double max_close_dist = 0.4;
@@ -140,10 +140,10 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         if(marked_points.find(origin) != marked_points.end())
             continue;
 
-        _log(logINFO) << "Unmarked points count: " << points.size() - marked_points.size() << " Marked points count: " << marked_points.size();
-        _log(logINFO) << "points.size: " << points.size() << " origin_i: " << origin_i << " origin->id: " << origin->id ;
+        _log(logDEBUG) << "Unmarked points count: " << points.size() - marked_points.size() << " Marked points count: " << marked_points.size();
+        _log(logDEBUG) << "points.size: " << points.size() << " origin_i: " << origin_i << " origin->id: " << origin->id ;
 
-        _log(logDEBUG2) << "Current canopy origin: " << origin->id;
+        _log(logDEBUG1) << "Current canopy origin: " << origin->id;
 
         Canopy *c1;
         Canopy *c2;
@@ -154,9 +154,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
         double dist = get_distance_between_points(c1->center, c2->center);
 
-        _log(logDEBUG3) << *c1;
-        _log(logDEBUG3) << *c2;
-        _log(logDEBUG3) << "dist: " << dist;
+        _log(logDEBUG2) << *c1;
+        _log(logDEBUG2) << *c2;
+        _log(logDEBUG2) << "dist: " << dist;
 
         //cout << "Point1:" << endl;
         //cout << *c1 << endl;
@@ -174,9 +174,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
             c2=create_canopy(c1->center, points, close_points, max_canopy_dist, max_close_dist, false);
             dist = get_distance_between_points(c1->center, c2->center); 
-            _log(logDEBUG3) << *c1;
-            _log(logDEBUG3) << *c2;
-            _log(logDEBUG3) << "distance: " << dist;
+            _log(logDEBUG2) << *c1;
+            _log(logDEBUG2) << *c2;
+            _log(logDEBUG2) << "distance: " << dist;
         }
 
         //Now we know that c1 and c2 are close enough and we should choose the one that has more neighbours
@@ -226,13 +226,13 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
             Canopy* c2 = canopy_vector[i]; 
 
-            _log(logDEBUG3) << "Calculating distances";
-            _log(logDEBUG3) << *c->center;
-            _log(logDEBUG3) << *c2->center;
+            _log(logDEBUG2) << "Calculating distances";
+            _log(logDEBUG2) << *c->center;
+            _log(logDEBUG2) << *c2->center;
 
             double dist = get_distance_between_points(c->center, c2->center);
 
-            _log(logDEBUG3) << "Distance: " << dist;
+            _log(logDEBUG2) << "Distance: " << dist;
 
             if(dist < max_merge_dist){
 #pragma omp critical
