@@ -234,9 +234,7 @@ int main(int argc, char* argv[])
     }
 
 
-    //cout << "####################Results####################" << endl;
-    //cout << "####################Results####################" << endl;
-    //cout << "####################Results####################" << endl;
+    _log(logPROGRESS) << "####################Writing Results####################" ;
     BOOST_FOREACH(Canopy* c, canopies){
         //cout << *c;
         output_file << "canopy: ";

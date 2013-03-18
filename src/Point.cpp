@@ -5,7 +5,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <functional>
 
+//#include <boost/phoenix/core.hpp>
+//#include <boost/phoenix/bind.hpp>
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/algorithm/string.hpp>
@@ -76,11 +80,11 @@ Point::~Point(){
 
 bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
 
-    int num_non_zero_medians = 0;
+    int num_non_zero_samples = 0;
     for(int i=0; i < num_data_samples; i++){
         if(sample_data[i] > 0.0000001){
-            num_non_zero_medians++;
-            if(num_non_zero_medians >= x)
+            num_non_zero_samples++;
+            if(num_non_zero_samples >= x)
                 return true;
         }
     }
@@ -185,37 +189,16 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
     return centroid;
 }
 
+
 void filter_out_input_points(std::vector<Point*>& points, int min_non_zero_data_samples){
-
-    int num_points = points.size();
-    int num_data_samples = points[0]->num_data_samples;
-
-    vector<int> indexes_to_drop;
-
-    for(int i = 0; i < num_points; i++){
-        int num_non_zero_samples = 0;
-        for(int j = 0; j < num_data_samples; j++){
-            if( points[i]->sample_data[j] > 0.0000001 ){
-                num_non_zero_samples++;
-                if(num_non_zero_samples >= min_non_zero_data_samples)
-                    break;
-            }
-        }
-        if(num_non_zero_samples < min_non_zero_data_samples)
-            indexes_to_drop.push_back(i);
-    }
-
-    std::sort(indexes_to_drop.begin(), indexes_to_drop.end());
-    std::reverse(indexes_to_drop.begin(), indexes_to_drop.end());
-
-    for(int i = 0; i < indexes_to_drop.size(); i++){
-        delete points[indexes_to_drop[i]];
-        points.erase(points.begin() + indexes_to_drop[i]);
-    }
-
-
+    
+    //This beauty comes from:
+    //http://en.wikipedia.org/wiki/Erase-remove_idiom
+    //http://stackoverflow.com/questions/6263044/idiomatic-c-for-remove-if
+    points.erase( remove_if(points.begin(), points.end(), !boost::bind(&Point::check_if_num_non_zero_samples_is_greater_than_x, _1, min_non_zero_data_samples) ), points.end());   
 
 }
+
 
 std::size_t hash_value(const Point& p){
     boost::hash<std::string> hasher;
