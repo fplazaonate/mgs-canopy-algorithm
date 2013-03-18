@@ -11,6 +11,8 @@
 #include <CanopyClustering.hpp>
 #include <Log.hpp>
 
+#include <prog_bar_misc.hpp>
+
 Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_neighbour_dist, double max_close_dist, bool set_close_points){
 
     std::vector<Point*> neighbours;
@@ -102,7 +104,6 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp){
 
-    _log(logPROGRESS) << "############Creating Canopies############";
     _log(logINFO) << "General:";
     _log(logINFO) << "num_threads:\t " << num_threads;
     _log(logINFO) << "";
@@ -116,9 +117,11 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     _log(logINFO) << "stop_proportion_of_points:\t " << stop_proportion_of_points;
     _log(logINFO) << "stop_num_single_point_clusters:\t " << stop_num_single_point_clusters;
 
+    _log(logPROGRESS) << "############ Shuffling ############";
     //TODO: ensure it is actually random
     //std::random_shuffle(points.begin(), points.end());
 
+    _log(logPROGRESS) << "############ Creating Canopies ############";
     boost::unordered_set<Point*> marked_points;//Points that should not be investigated as origins
     vector<unsigned int> canopy_size_per_origin_num;//Contains size of the canopy created from origin by it's number, so first origin gave canopy of size 5, second origin gave canopy of size 8 and so on
     int num_of_consecutive_canopies_of_size_1 = 0;
@@ -145,6 +148,16 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
         if(num_of_consecutive_canopies_of_size_1 == stop_num_single_point_clusters){
             continue;
+        }
+
+        //Show progress bar
+        {
+            //Only master thread executes this
+            if(omp_get_thread_num() == 0){
+                if(log_level >= logPROGRESS){
+                    printProgBar(marked_points.size(),stop_proportion_of_points * points.size());
+                }
+            }
         }
 
 
@@ -259,6 +272,11 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     _log(logINFO) << "Avg. number of canopy jumps: " << num_canopy_jumps/(double)canopy_vector.size();
     _log(logINFO) << "Number of canopies before merging: " << canopy_vector.size();
 
+    int original_number_of_canopies = canopy_vector.size();
+
+    //
+    // Merge Canopies
+    //
     std::vector<Canopy*> merged_canopy_vector;
 
     _log(logPROGRESS) << "";
@@ -275,6 +293,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         //Get indexes of those canopies that are nearby
 #pragma omp parallel for shared(canopies_to_be_merged_index_vector) 
         for(int i = 1; i < canopy_vector.size(); i++){
+
 
             Canopy* c2 = canopy_vector[i]; 
 
@@ -345,6 +364,13 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         if( !any_canopy_merged ){
             merged_canopy_vector.push_back(canopy_vector[0]);
             canopy_vector.erase(canopy_vector.begin());
+        }
+
+        //Show progress bar
+        {
+            if(log_level >= logPROGRESS){
+                printProgBar(original_number_of_canopies - canopy_vector.size(), original_number_of_canopies );
+            }
         }
     }
 
