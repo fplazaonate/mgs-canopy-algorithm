@@ -14,58 +14,18 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <boost/foreach.hpp>
+#include <boost/assign/std/vector.hpp> 
 
 #include <Point.hpp>
 #include <CanopyClustering.hpp>
 #include <Log.hpp>
+#include <program_options_misc.hpp>
 
 using namespace std;
 //using namespace boost::iostreams;
 using namespace boost::program_options;
+using namespace boost::assign;
 
-
-void verify_input_correctness(const options_description& all_options_desc, const variables_map& command_line_variable_map){
-    if (command_line_variable_map.count("help")) {
-        cout << "Usage: cc.bin [options] POINTS_INPUT_FILE CLUSTERS_OUTPUT_FILE" << endl << endl;;
-        cout << all_options_desc<< "\n";
-        exit(1);
-    }
-         
-    int num_threads = command_line_variable_map["num_threads"].as<int>();
-    double max_canopy_dist = command_line_variable_map["max_canopy_dist"].as<double>();
-    double max_close_dist = command_line_variable_map["max_close_dist"].as<double>();
-    double max_merge_dist = command_line_variable_map["max_merge_dist"].as<double>();
-    double min_step_dist = command_line_variable_map["min_step_dist"].as<double>();
-    string verbosity = command_line_variable_map["verbosity"].as<string>();
-
-    if( max_canopy_dist < 0 || max_canopy_dist > 1 || 
-        max_close_dist < 0 || max_close_dist > 1 ||
-        max_merge_dist < 0 || max_merge_dist > 1 ||
-        min_step_dist < 0 || min_step_dist > 1 
-      ){
-        cout << "Distance values must be a number within range <0,1>" << endl;
-        exit(1);
-    }
-
-    if(num_threads < 1){
-        cout << "Number of threads is the number of logical cpus you can utilize for the job, as shown by /proc/cpuinfo, it must be at least one" << endl;
-
-    }
-
-    if(num_threads > 999){
-        cout << "if you really have more than 999 threads available... well congratulations - you need to recompile this program" << endl; 
-    }
-
-    if(verbosity != "error" && verbosity != "progress" && verbosity != "warn" && verbosity != "info" && verbosity != "debug" && verbosity != "debug1"){
-        cout << "Verbosity must be one of: error, progress, warn, info, debug, debug1!" << endl;
-        exit(1);
-    }    
-
-    if (command_line_variable_map.count("point_input_file") != 1 ){
-        cout << "Incorrect specification of point input file path!" << endl;
-        exit(1);
-    }
-}
 
 int main(int argc, char* argv[])
 {
@@ -139,9 +99,34 @@ int main(int argc, char* argv[])
     store(command_line_parser(argc,argv).options(all_options_desc).positional(command_line_positional_desc).run(), command_line_variable_map);
     notify(command_line_variable_map);
 
+    //
     //Verify command line input parameters
-    verify_input_correctness(all_options_desc, command_line_variable_map);
+    //
+    //verify_input_correctness(all_options_desc, command_line_variable_map);
+    if (command_line_variable_map.count("help")) {
+        cout << "Usage: cc.bin [options] POINTS_INPUT_FILE CLUSTERS_OUTPUT_FILE" << endl << endl;;
+        cout << all_options_desc<< "\n";
+        exit(1);
+    }
 
+    check_if_file_is_readable("point_input_file",point_input_file);
+    check_if_file_is_writable("output_file_path",output_file_path);
+    vector<string> valid_verbosities;
+    valid_verbosities += "error", "progress", "warn", "info", "debug", "debug1", "debug2";
+    check_if_one_of("verbosity_option",verbosity_option, valid_verbosities);
+    check_if_within_bounds("num_threads",num_threads,1,999);//Not exactly future proof, but let's put foolproofness first
+    check_if_within_bounds("max_canopy_dist",max_canopy_dist,0.0,1.0);
+    check_if_within_bounds("max_close_dist",max_close_dist,0.0,1.0);
+    check_if_within_bounds("max_merge_dist",max_merge_dist,0.0,1.0);
+    check_if_within_bounds("min_step_dist",min_step_dist,0.0,1.0);
+
+    check_if_within_bounds("min_non_zero_data_samples",min_non_zero_data_samples,0,10000);
+    check_if_within_bounds("min_num_non_zero_medians",min_num_non_zero_medians,0,10000);
+    check_if_within_bounds("max_single_data_point_proportion",max_single_data_point_proportion,0.0,1.0);
+    check_if_within_bounds("stop_proportion_of_points",stop_proportion_of_points,0.0,1.0);
+    check_if_within_bounds("stop_num_single_point_clusters",stop_num_single_point_clusters,0,10000000);
+    if(canopy_size_stats_fp != "")
+        check_if_file_is_writable("canopy_size_stats_fp",canopy_size_stats_fp);
 
     //
     //Set user chosen logging level
@@ -160,6 +145,7 @@ int main(int argc, char* argv[])
         log_level = logDEBUG1;
     }
 
+    
     //
     //Open the output file, just to make sure i can write to it
     //
