@@ -26,7 +26,7 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
             Point* potential_neighbour = points[i];
             double dist = get_distance_between_points(origin, potential_neighbour);
 
-            if(dist < max_close_dist){
+            if(dist < max_close_dist && origin != potential_neighbour){
 
                 close_points.push_back(potential_neighbour);
 
