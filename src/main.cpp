@@ -235,11 +235,12 @@ int main(int argc, char* argv[])
 
 
     _log(logPROGRESS) << "####################Writing Results####################" ;
+   sort(canopies.begin(), canopies.end(), compare_canopy_ptrs);
     BOOST_FOREACH(Canopy* c, canopies){
         //cout << *c;
-        output_file << "canopy: ";
+        output_file << c->neighbours.size() << ": ";
         BOOST_FOREACH(Point* p, c->neighbours){
-            output_file << p->id << ", ";
+            output_file << p->id << ",";
         }
         output_file << endl;
     }

@@ -31,3 +31,7 @@ std::ostream& operator<<(std::ostream& ost, const Canopy& c)
 
 
 }
+
+bool compare_canopy_ptrs(const Canopy* a, const Canopy* b){
+    return (a->neighbours.size() > b->neighbours.size());
+}
