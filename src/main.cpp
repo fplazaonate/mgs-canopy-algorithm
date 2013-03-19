@@ -22,7 +22,6 @@
 #include <program_options_misc.hpp>
 
 using namespace std;
-//using namespace boost::iostreams;
 using namespace boost::program_options;
 using namespace boost::assign;
 
@@ -35,6 +34,10 @@ int main(int argc, char* argv[])
     
     //Set initial logging level
     log_level = logINFO;
+
+    //Preapre Time Profile
+    TimeProfile time_profile;
+    time_profile.start_timer("Total");
 
     //Prepare variables for command line input
     string point_input_file;
@@ -51,6 +54,9 @@ int main(int argc, char* argv[])
     double stop_proportion_of_points;
     int stop_num_single_point_clusters;
     string canopy_size_stats_fp;
+    bool show_progress_bar;
+    bool print_time_statistics;
+
 
     //Define and read command line options
     options_description all_options_desc("Allowed options");
@@ -87,6 +93,8 @@ int main(int argc, char* argv[])
 
     misc_options_desc.add_options()
         ("save_canopy_size_statistics", value<string>(&canopy_size_stats_fp)->default_value(""), "Provide path to file to which statistics of canopy size vs number of canopies created will be saved")
+        ("print_time_statistics,t", bool_switch(&print_time_statistics), "Print wall clock time profiles of various analysis parts. This is not aggressive and won't increase compuatation time.")
+        ("show_progress_bar,b", bool_switch(&show_progress_bar), "Show progress bar, nice if output is printed to console, don't use if you are redirecting to a file. Verbosity must be set to at least PROGRESS for it to have an effect.") 
         ("help", "write help message");
 
     all_options_desc.add(general_options_desc).add(algorithm_param_options_desc).add(filter_in_options_desc).add(filter_out_options_desc).add(early_stop_options_desc).add(misc_options_desc);
@@ -156,11 +164,15 @@ int main(int argc, char* argv[])
     //
     //Parse point description file
     //
+    time_profile.start_timer("File loading");
+
     vector<Point*> points;
 
     int point_file;
     char* point_file_mmap;
     struct stat statbuf;
+
+    
 
     /* open the input file */
     point_file = open(point_input_file.c_str(), O_RDONLY);
@@ -171,8 +183,10 @@ int main(int argc, char* argv[])
     /* mmap the input file */
     point_file_mmap = (char*)mmap (0, statbuf.st_size, PROT_WRITE, MAP_PRIVATE, point_file, 0);
 
-    _log(logINFO) << "File loaded into memory, generating points";
+    time_profile.stop_timer("File loading");
+    time_profile.start_timer("Reading points");
 
+    _log(logINFO) << "File loaded into memory, generating points";
 
     char* line_start_ptr = point_file_mmap;
     char* line_end_ptr = point_file_mmap;
@@ -190,6 +204,8 @@ int main(int argc, char* argv[])
         line_start_ptr = ++line_end_ptr;
     }
 
+    time_profile.stop_timer("Reading points");
+
     _log(logINFO) << "Points read, dropping file from memory";
 
     /* drop the file from memory*/
@@ -197,14 +213,18 @@ int main(int argc, char* argv[])
     
     _log(logINFO) << "Running basic validation of points";
 
+    time_profile.start_timer("Point validation");
     verify_proper_point_input_or_die(points);
+    time_profile.stop_timer("Point validation");
 
 
+    time_profile.start_timer("Input point filtering");
     if(min_non_zero_data_samples > 0){
         _log(logINFO) << "Filtering points";
         filter_out_input_points(points, min_non_zero_data_samples);
     }
 
+    time_profile.stop_timer("Input point filtering");
 
     _log(logINFO) << "Finished input points processing";
     
@@ -215,22 +235,27 @@ int main(int argc, char* argv[])
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_fp);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_fp, show_progress_bar, time_profile);
     
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 
     //
     //Filter out canopies
     //
+
     if(min_num_non_zero_medians){
+        time_profile.start_timer("Filtering canopies by medians");
         CanopyClusteringAlg::filter_clusters_by_zero_medians(min_num_non_zero_medians, canopies);
         _log(logINFO) << "Finished filtering by medians, number of canopies:" << canopies.size();
+        time_profile.stop_timer("Filtering canopies by medians");
     }
 
 
     if(max_single_data_point_proportion < 0.99999){ //It's due to a double comparison
+        time_profile.start_timer("Filtering canopies by single point bias");
         CanopyClusteringAlg::filter_clusters_by_single_point_skew(max_single_data_point_proportion, canopies);
         _log(logINFO) << "Finished filtering by single data point proportion, number of canopies:" << canopies.size();
+        time_profile.stop_timer("Filtering canopies by single point bias");
     }
 
 
@@ -253,6 +278,11 @@ int main(int argc, char* argv[])
         delete point;
 
 
+    time_profile.stop_timer("Total");
+    //Write output statistics
+    if(print_time_statistics){
+        cout << time_profile << endl;
+    }
 
 
     return 0;

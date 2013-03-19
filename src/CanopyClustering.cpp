@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <ctime>
 
 #include <algorithm>
 
@@ -51,7 +52,6 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
         }
 
     }
-    //_log(logINFO) << "Close points size: " << close_points.size() << " neighbours: " << neighbours.size();
 
     neighbours.push_back(origin);
 
@@ -102,7 +102,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp){
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp, bool show_progress_bar, TimeProfile& time_profile){
 
     _log(logINFO) << "General:";
     _log(logINFO) << "num_threads:\t " << num_threads;
@@ -118,27 +118,35 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     _log(logINFO) << "stop_num_single_point_clusters:\t " << stop_num_single_point_clusters;
 
     _log(logPROGRESS) << "############ Shuffling ############";
-    //TODO: ensure it is actually random
-    //std::random_shuffle(points.begin(), points.end());
+    time_profile.start_timer("Shuffling");
+    std::srand ( unsigned ( std::time(NULL) ) );
+    std::random_shuffle(points.begin(), points.end());
+    time_profile.stop_timer("Shuffling");
 
     _log(logPROGRESS) << "############ Creating Canopies ############";
     boost::unordered_set<Point*> marked_points;//Points that should not be investigated as origins
     vector<unsigned int> canopy_size_per_origin_num;//Contains size of the canopy created from origin by it's number, so first origin gave canopy of size 5, second origin gave canopy of size 8 and so on
     int num_of_consecutive_canopies_of_size_1 = 0;
+    int last_progress_displayed_at_num_points = 0;
 
     std::vector<Canopy*> canopy_vector;
 
     vector<Point*> close_points;
     close_points.reserve(points.size());
 
+    
+
+
+
     //
     //Create canopies
     //
+    time_profile.start_timer("Clustering");
         
     int num_canopy_jumps = 0;
 
 
-#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps, canopy_size_per_origin_num, num_of_consecutive_canopies_of_size_1) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist) schedule(dynamic)
+#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps, canopy_size_per_origin_num, num_of_consecutive_canopies_of_size_1) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, last_progress_displayed_at_num_points) schedule(dynamic)
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
 
         //Early stopping proportion of points
@@ -154,8 +162,11 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         {
             //Only master thread executes this
             if(omp_get_thread_num() == 0){
-                if(log_level >= logPROGRESS){
-                    printProgBar(marked_points.size(),stop_proportion_of_points * points.size());
+                if(log_level >= logPROGRESS && show_progress_bar){
+                    if(marked_points.size() > last_progress_displayed_at_num_points + stop_proportion_of_points * points.size()/100){
+                        printProgBar(marked_points.size(),stop_proportion_of_points * points.size());
+                        last_progress_displayed_at_num_points = marked_points.size();
+                    }
                 }
             }
         }
@@ -253,6 +264,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         }
 
     }
+    time_profile.stop_timer("Clustering");
 
     //Save canopy size statistics if requested
     if(canopy_size_stats_fp != ""){
@@ -279,6 +291,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     //
     std::vector<Canopy*> merged_canopy_vector;
 
+    time_profile.start_timer("Merging");
     _log(logPROGRESS) << "";
     _log(logPROGRESS) << "############Merging canopies#############";
     while(canopy_vector.size()){
@@ -373,6 +386,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
             }
         }
     }
+    time_profile.stop_timer("Merging");
 
     _log(logINFO) << "Number of canopies after merging: " << merged_canopy_vector.size();
 

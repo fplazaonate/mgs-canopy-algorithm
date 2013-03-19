@@ -1,4 +1,3 @@
-
 #ifndef POINT
 #define POINT
 
