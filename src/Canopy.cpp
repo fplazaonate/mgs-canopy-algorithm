@@ -8,16 +8,12 @@ Canopy::Canopy(std::vector<Point*> neighbours): neighbours(neighbours){
 }
 
 Canopy::~Canopy(){
-    if(!center->belongs_to_input_dataset)
-        delete center;
+    delete center;
 }
 
 void Canopy::find_and_set_center(){
 
-    if(neighbours.size() == 1)
-        center = neighbours[0];
-    else
-        center = get_centroid_of_points(neighbours);
+    center = get_centroid_of_points(neighbours);
 
 }
 

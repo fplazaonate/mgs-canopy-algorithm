@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
 
     _log(logINFO) << "Finished input points processing";
     
-    _log(logINFO) << "Number of points read: " << points.size();
+    _log(logINFO) << "Number of points after filtering: " << points.size();
     
     //
     //Run Canopy Clustering

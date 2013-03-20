@@ -15,12 +15,9 @@ class Point {
 
         Point(const Point& p);
         Point(const char* line);
-        ~Point();
+        virtual ~Point();
         
-        bool operator==(const Point& other) const;
-
         std::string id;
-        bool belongs_to_input_dataset;
 
         bool check_if_num_non_zero_samples_is_greater_than_x(int x);
         bool check_if_single_point_proportion_is_smaller_than(double x);

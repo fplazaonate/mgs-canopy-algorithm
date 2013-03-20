@@ -18,8 +18,6 @@
 using namespace std;
 
 Point::Point(const char* line){
-    belongs_to_input_dataset = true;
-
     //Copy line to private buffer - strtok will modify it
     char* private_line = new char[strlen(line) + 1];
     strcpy(private_line,line);
@@ -59,7 +57,6 @@ Point::Point(const char* line){
 Point::Point(const Point& p){
     id = p.id;
     num_data_samples = p.num_data_samples;
-    belongs_to_input_dataset = p.belongs_to_input_dataset;
 
     sample_data = new double[num_data_samples];
     for(int i=0; i < num_data_samples;i++){
@@ -110,7 +107,6 @@ void verify_proper_point_input_or_die(const std::vector<Point*>& points){
     //Verify all points have the same number of samples
     int num_samples = points[0]->num_data_samples;
     BOOST_FOREACH(const Point* point, points){
-        _log(logDEBUG) <<  *point;
         assert(point->num_data_samples == num_samples);
     }
 
@@ -145,12 +141,8 @@ double get_distance_between_points(const Point* p1, const Point* p2){
 
 Point* get_centroid_of_points(const std::vector<Point*>& points){
 
-    //TODO: median should be estimated using boost/accumulators/statistics/median.hpp
-
-    Point* centroid = new Point(*points[0]);
-    //TODO: Could be done better
+    Point* centroid = new Point(*(points[0]));
     centroid->id = "!GENERATED!";
-    centroid->belongs_to_input_dataset = false;
     
     assert(points.size());
 
@@ -165,8 +157,7 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
         BOOST_FOREACH(const Point* p, points){
 
             //TODO: this is slow as hell
-            if(p->belongs_to_input_dataset)
-                point_samples.push_back(p->sample_data[i]);
+            point_samples.push_back(p->sample_data[i]);
 
         }
 
@@ -192,27 +183,22 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
 }
 
 
-void filter_out_input_points(std::vector<Point*>& points, int min_non_zero_data_samples){
-    
-    //This beauty comes from:
-    //http://en.wikipedia.org/wiki/Erase-remove_idiom
-    //http://stackoverflow.com/questions/6263044/idiomatic-c-for-remove-if
-    points.erase( remove_if(points.begin(), points.end(), !boost::bind(&Point::check_if_num_non_zero_samples_is_greater_than_x, _1, min_non_zero_data_samples) ), points.end());   
-
+void filter_out_input_points(vector<Point*>& points, int min_non_zero_data_samples){
+    vector<Point*>::iterator i = points.begin();
+    while( i != points.end() ){
+        if( ! (*i)->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples) ){
+            delete *i;
+            i = points.erase(i);
+        } else {
+            i++;
+        }
+    }
 }
 
 
 std::size_t hash_value(const Point& p){
     boost::hash<std::string> hasher;
     return hasher(p.id);
-}
-
-bool Point::operator==(const Point& other) const {
-    if(id == other.id){
-        return true;
-    } else {
-        return false;
-    }
 }
 
 std::ostream& operator<<(std::ostream& ost, const Point& p)
