@@ -185,7 +185,7 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
 
 void filter_out_input_points(vector<Point*>& points, vector<Point*>& filtered_points, int min_non_zero_data_samples){
 
-#pragma omp parallel for shared(filtered_points)
+#pragma omp parallel for 
     for(int i = 0; i < points.size(); i++){
         if( points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples) ){
 #pragma omp critical
