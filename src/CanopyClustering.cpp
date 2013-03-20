@@ -122,7 +122,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     _log(logPROGRESS) << "############ Shuffling ############";
     time_profile.start_timer("Shuffling");
     std::srand ( unsigned ( std::time(NULL) ) );
-    //std::random_shuffle(points.begin(), points.end());
+    std::random_shuffle(points.begin(), points.end());
     time_profile.stop_timer("Shuffling");
 
     _log(logPROGRESS) << "";
@@ -359,7 +359,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
             //Show progress bar
             {
-                if(log_level >= logPROGRESS){
+                if(log_level >= logPROGRESS && show_progress_bar){
                     if(original_number_of_canopies - canopy_vector.size() % 1000)
                         printProgBar(original_number_of_canopies - canopy_vector.size(), original_number_of_canopies );
                 }
