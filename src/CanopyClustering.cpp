@@ -224,7 +224,14 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
         //Now we know that c1 and c2 are close enough and we should choose the one that has more neighbours
 
-        Canopy* final_canopy = c1->neighbours.size() > c2->neighbours.size() ? c1 : c2;
+        Canopy* final_canopy; 
+        if(c1->neighbours.size() > c2->neighbours.size()){
+            final_canopy = c1;
+            delete c2;
+        } else {
+            final_canopy = c2;
+            delete c1;
+        }
 
 #pragma omp critical
         {
@@ -236,7 +243,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
                 canopy_vector.push_back(final_canopy);
 
-                BOOST_FOREACH(Point* n, c1->neighbours){
+                BOOST_FOREACH(Point* n, final_canopy->neighbours){
                     marked_points.insert(n);
                 }
 
