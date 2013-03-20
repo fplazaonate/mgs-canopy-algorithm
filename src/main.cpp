@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     positional_options_description command_line_positional_desc;
     command_line_positional_desc.add("point_input_file",1);
     command_line_positional_desc.add("output_file_path",2);
-    //command_line_positional_desc.add("output_centers_file_path",3);
+    command_line_positional_desc.add("output_centers_file_path",3);
 
     variables_map command_line_variable_map;
     store(command_line_parser(argc,argv).options(all_options_desc).positional(command_line_positional_desc).run(), command_line_variable_map);
@@ -275,21 +275,23 @@ int main(int argc, char* argv[])
     output_file.open(output_file_path.c_str(), ios::out | ios::trunc);
     BOOST_FOREACH(Canopy* c, canopies){
         BOOST_FOREACH(Point* p, c->neighbours){
-            output_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i++ << "\t";
+            output_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
             output_file << p->id << endl;
         }
+        i++;
     }
     output_file.close();
 
     i=0;
     output_file.open(output_centers_file_path.c_str(), ios::out | ios::trunc);
     BOOST_FOREACH(Canopy* c, canopies){
-        output_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i++ << "\t";
+        output_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
         
         for(int j=0; j < c->center->num_data_samples; j++){
             output_file << c->center->sample_data[j] << "\t" ;
         }
 
+        i++;
         output_file << endl;
     }
     output_file.close();
