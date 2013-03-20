@@ -8,15 +8,11 @@
 
 using namespace std;
 class Point {
-    private:
+    public:
         double* sample_data;
         double* sample_data_pearson_precomputed;
         int num_data_samples;
 
-
-
-
-    public:
         Point(const Point& p);
         Point(const char* line);
         ~Point();
@@ -24,6 +20,7 @@ class Point {
         bool operator==(const Point& other) const;
 
         std::string id;
+        bool belongs_to_input_dataset;
 
         bool check_if_num_non_zero_samples_is_greater_than_x(int x);
         bool check_if_single_point_proportion_is_smaller_than(double x);

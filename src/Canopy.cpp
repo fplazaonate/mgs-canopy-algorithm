@@ -3,21 +3,27 @@
 
 #include <Canopy.hpp>
 
-Canopy::Canopy(){
-    center = NULL;
-    origin = NULL;
+Canopy::Canopy(std::vector<Point*> neighbours): neighbours(neighbours){
+    find_and_set_center();
 }
 
-Canopy::Canopy(Point* origin, Point* center, std::vector<Point*> neighbours): origin(origin), center(center), neighbours(neighbours){}
+Canopy::~Canopy(){
+    if(!center->belongs_to_input_dataset)
+        delete center;
+}
+
+void Canopy::find_and_set_center(){
+
+    if(neighbours.size() == 1)
+        center = neighbours[0];
+    else
+        center = get_centroid_of_points(neighbours);
+
+}
 
 std::ostream& operator<<(std::ostream& ost, const Canopy& c)
 {
     ost << ">>>>>>>>>>Canopy>>>>>>>>" << std::endl;
-    ost << "Origin:" << std::endl;
-    if(c.origin != NULL)
-        ost << *c.origin;
-    else
-        ost << "===NONE===" << endl;
     ost << "Center:" << std::endl;
     if(c.center != NULL)
         ost << *c.center;
@@ -35,3 +41,5 @@ std::ostream& operator<<(std::ostream& ost, const Canopy& c)
 bool compare_canopy_ptrs(const Canopy* a, const Canopy* b){
     return (a->neighbours.size() > b->neighbours.size());
 }
+
+

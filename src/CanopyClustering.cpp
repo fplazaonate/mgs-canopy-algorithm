@@ -19,15 +19,17 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
     std::vector<Point*> neighbours;
 
     if(set_close_points){
+        Point* potential_neighbour; 
+
         //Go through all points and set the close points to contain the ones that are "close"
         close_points.clear();//Will not reallocate
-        close_points.push_back(origin);
         for(int i=0; i<points.size(); i++){
 
-            Point* potential_neighbour = points[i];
+            potential_neighbour = points[i];
+
             double dist = get_distance_between_points(origin, potential_neighbour);
 
-            if(dist < max_close_dist && origin != potential_neighbour){
+            if(dist < max_close_dist){
 
                 close_points.push_back(potential_neighbour);
 
@@ -38,31 +40,25 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
                 }
             } 
         }
+
     } else {
+            
+        Point* potential_neighbour;
 
         for(int i=0; i<close_points.size(); i++){
 
-            Point* potential_neighbour = close_points[i];
+            potential_neighbour = close_points[i];
+
             double dist = get_distance_between_points(origin, potential_neighbour);
 
-            //TODO: get rid of this hack
-            if((dist < max_neighbour_dist) && (!potential_neighbour->id.compare("!GENERATED!"))){
+            if(dist < max_neighbour_dist){
                 neighbours.push_back(potential_neighbour);
             }
         }
 
     }
 
-    neighbours.push_back(origin);
-
-    Point* center;
-
-    if(neighbours.size() == 1)
-        center = origin;
-    else
-        center = get_centroid_of_points(neighbours);
-
-    return new Canopy(origin, center, neighbours);
+    return new Canopy(neighbours);
 
 }
 
@@ -104,6 +100,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp, bool show_progress_bar, TimeProfile& time_profile){
 
+    _log(logINFO) << "";
     _log(logINFO) << "General:";
     _log(logINFO) << "num_threads:\t " << num_threads;
     _log(logINFO) << "";
@@ -117,12 +114,14 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     _log(logINFO) << "stop_proportion_of_points:\t " << stop_proportion_of_points;
     _log(logINFO) << "stop_num_single_point_clusters:\t " << stop_num_single_point_clusters;
 
+    _log(logPROGRESS) << "";
     _log(logPROGRESS) << "############ Shuffling ############";
     time_profile.start_timer("Shuffling");
     std::srand ( unsigned ( std::time(NULL) ) );
-    std::random_shuffle(points.begin(), points.end());
+    //std::random_shuffle(points.begin(), points.end());
     time_profile.stop_timer("Shuffling");
 
+    _log(logPROGRESS) << "";
     _log(logPROGRESS) << "############ Creating Canopies ############";
     boost::unordered_set<Point*> marked_points;//Points that should not be investigated as origins
     vector<unsigned int> canopy_size_per_origin_num;//Contains size of the canopy created from origin by it's number, so first origin gave canopy of size 5, second origin gave canopy of size 8 and so on
@@ -241,11 +240,6 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
                     marked_points.insert(n);
                 }
 
-                //TODO: Could be done better
-                if(!(final_canopy->origin->id.compare("!GENERATED!"))){
-                    marked_points.insert(c1->origin);
-                }
-
                 //Early stopping by number of number of consecutive canopies of size 1
                 if(final_canopy->neighbours.size() == 1)
                     num_of_consecutive_canopies_of_size_1++;
@@ -294,100 +288,74 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     time_profile.start_timer("Merging");
     _log(logPROGRESS) << "";
     _log(logPROGRESS) << "############Merging canopies#############";
-    while(canopy_vector.size()){
-        bool any_canopy_merged = false;
 
-        std::vector<int> canopies_to_be_merged_index_vector;
+    while(canopy_vector.size()){
+
         std::vector<Canopy*> canopies_to_merge;
 
         //This is the canopy we will look for partners for
-        Canopy* c = canopy_vector[0];
+        Canopy* c = *canopy_vector.rbegin();
+        canopy_vector.pop_back();
+
+        canopies_to_merge.push_back(c);
 
         //Get indexes of those canopies that are nearby
-#pragma omp parallel for shared(canopies_to_be_merged_index_vector) 
-        for(int i = 1; i < canopy_vector.size(); i++){
-
+//#pragma omp parallel for shared(canopies_to_merge) 
+        for(int i = 0; i < canopy_vector.size(); i++){
 
             Canopy* c2 = canopy_vector[i]; 
 
-            _log(logDEBUG2) << "Calculating distances";
-            _log(logDEBUG2) << *c->center;
-            _log(logDEBUG2) << *c2->center;
-
             double dist = get_distance_between_points(c->center, c2->center);
 
-            _log(logDEBUG2) << "Distance: " << dist;
-
             if(dist < max_merge_dist){
-#pragma omp critical
+//#pragma omp critical
                 {
-                    canopies_to_be_merged_index_vector.push_back(i);
+                    canopies_to_merge.push_back(c2);
                 }
             }
 
         }
 
-        //Assemble all canopies close enough in one bag 
-        if( canopies_to_be_merged_index_vector.size() ){
+        //There are several canopies to merge, do it
+        if( canopies_to_merge.size() > 1 ){
 
-            //Put all canopies to be merged in one bag
-            canopies_to_merge.push_back(canopy_vector[0]);
-
-            BOOST_FOREACH(int i, canopies_to_be_merged_index_vector)
-                canopies_to_merge.push_back(canopy_vector[i]);
-
-        }
-            
-
-        //Remove canopies that were close enough from the canopy vector
-        if( canopies_to_be_merged_index_vector.size() ){
-            //Now we delete those canopies that we merged
-
-            //First - sort so that the indexes won't change during our merger
-            std::sort(canopies_to_be_merged_index_vector.begin(), canopies_to_be_merged_index_vector.end());
-
-            while(canopies_to_be_merged_index_vector.size()){
-                canopy_vector.erase(canopy_vector.begin() + canopies_to_be_merged_index_vector.back());
-                canopies_to_be_merged_index_vector.pop_back();
-            }
-            canopy_vector.erase(canopy_vector.begin());
-
-            
-        }
-
-        //Actually merge the canopies and add the new one to the beginning of the canopy vector
-        if( canopies_to_merge.size() ){
-            any_canopy_merged = true;
-
-            Canopy* merged_canopy= new Canopy();
+            vector<Point*> all_points_from_merged_canopies;
 
             BOOST_FOREACH(Canopy* canopy, canopies_to_merge){
-               merged_canopy->neighbours.insert(merged_canopy->neighbours.begin(), canopy->neighbours.begin(), canopy->neighbours.end()); 
-                //delete those canopies which are merged into one
-               delete canopy;
+                BOOST_FOREACH(Point* n, canopy->neighbours){
+                    all_points_from_merged_canopies.push_back(n);
+                }
             }
 
-            merged_canopy->center = get_centroid_of_points( merged_canopy->neighbours );
+            Canopy* merged_canopy= new Canopy(all_points_from_merged_canopies);
 
-            canopy_vector.insert(canopy_vector.begin(), merged_canopy);
+            canopy_vector.push_back(merged_canopy);
 
-        }
+            
+            //Removed merged canopies //TODO might be slow
+            BOOST_FOREACH(Canopy* canopy, canopies_to_merge){
+                canopy_vector.erase(remove(canopy_vector.begin(), canopy_vector.end(), canopy), canopy_vector.end());
+                delete canopy;
+            }
+
 
         //If no canopies were merged remove the canopy we compared against the others
-        if( !any_canopy_merged ){
-            merged_canopy_vector.push_back(canopy_vector[0]);
-            canopy_vector.erase(canopy_vector.begin());
-        }
+        } else {
 
-        //Show progress bar
-        {
-            if(log_level >= logPROGRESS){
-                printProgBar(original_number_of_canopies - canopy_vector.size(), original_number_of_canopies );
+            merged_canopy_vector.push_back(c);
+
+            //Show progress bar
+            {
+                if(log_level >= logPROGRESS){
+                    if(original_number_of_canopies - canopy_vector.size() % 1000)
+                        printProgBar(original_number_of_canopies - canopy_vector.size(), original_number_of_canopies );
+                }
             }
         }
     }
     time_profile.stop_timer("Merging");
 
+    _log(logINFO) << "";
     _log(logINFO) << "Number of canopies after merging: " << merged_canopy_vector.size();
 
     return merged_canopy_vector;

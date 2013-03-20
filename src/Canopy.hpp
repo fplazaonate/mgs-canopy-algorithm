@@ -9,11 +9,11 @@ using namespace std;
 
 class Canopy {
     public:
-        Canopy();
-        Canopy(Point* origin, Point* center, std::vector<Point*> neighbours);
-        
+        Canopy(std::vector<Point*> neighbours);
+        virtual ~Canopy();
 
-        Point* origin;
+        void find_and_set_center();
+        
         Point* center;
         std::vector<Point*> neighbours;
 

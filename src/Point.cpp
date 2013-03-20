@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -7,8 +6,6 @@
 #include <string.h>
 #include <functional>
 
-//#include <boost/phoenix/core.hpp>
-//#include <boost/phoenix/bind.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/functional/hash.hpp>
@@ -21,6 +18,8 @@
 using namespace std;
 
 Point::Point(const char* line){
+    belongs_to_input_dataset = true;
+
     //Copy line to private buffer - strtok will modify it
     char* private_line = new char[strlen(line) + 1];
     strcpy(private_line,line);
@@ -60,6 +59,7 @@ Point::Point(const char* line){
 Point::Point(const Point& p){
     id = p.id;
     num_data_samples = p.num_data_samples;
+    belongs_to_input_dataset = p.belongs_to_input_dataset;
 
     sample_data = new double[num_data_samples];
     for(int i=0; i < num_data_samples;i++){
@@ -150,12 +150,13 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
     Point* centroid = new Point(*points[0]);
     //TODO: Could be done better
     centroid->id = "!GENERATED!";
+    centroid->belongs_to_input_dataset = false;
     
     assert(points.size());
 
     int num_samples = points[0]->num_data_samples;
 
-    _log(logDEBUG4) << "num samples: " << num_samples;
+    //_log(logDEBUG4) << "num samples: " << num_samples;
 
     for(int i = 0; i < num_samples; i++){
 
@@ -164,7 +165,8 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
         BOOST_FOREACH(const Point* p, points){
 
             //TODO: this is slow as hell
-            point_samples.push_back(p->sample_data[i]);
+            if(p->belongs_to_input_dataset)
+                point_samples.push_back(p->sample_data[i]);
 
         }
 
