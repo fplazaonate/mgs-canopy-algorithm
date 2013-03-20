@@ -183,16 +183,16 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
 }
 
 
-void filter_out_input_points(vector<Point*>& points, int min_non_zero_data_samples){
-    vector<Point*>::iterator i = points.begin();
-    while( i != points.end() ){
-        if( ! (*i)->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples) ){
-            delete *i;
-            i = points.erase(i);
-        } else {
-            i++;
+void filter_out_input_points(vector<Point*>& points, vector<Point*>& filtered_points, int min_non_zero_data_samples){
+
+#pragma omp parallel for shared(filtered_points)
+    for(int i = 0; i < points.size(); i++){
+        if( points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples) ){
+#pragma omp critical
+            filtered_points.push_back(points[i]);
         }
     }
+
 }
 
 

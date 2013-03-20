@@ -29,7 +29,7 @@ class Point {
         friend double get_distance_between_points(const Point* p1, const Point* p2);
         friend Point* get_centroid_of_points(const std::vector<Point*>& points);
         friend void verify_proper_point_input_or_die(const std::vector<Point*>& points);
-        friend void filter_out_input_points(std::vector<Point*>& points, int min_non_zero_data_samples);
+        friend void filter_out_input_points(vector<Point*>& points, vector<Point*>& filtered_points,int min_non_zero_data_samples);
 };
 
 

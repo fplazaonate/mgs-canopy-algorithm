@@ -169,6 +169,7 @@ int main(int argc, char* argv[])
     time_profile.start_timer("File loading");
 
     vector<Point*> points;
+    vector<Point*> filtered_points;
 
     int point_file;
     char* point_file_mmap;
@@ -223,21 +224,21 @@ int main(int argc, char* argv[])
     time_profile.start_timer("Input point filtering");
     if(min_non_zero_data_samples > 0){
         _log(logINFO) << "Filtering points";
-        filter_out_input_points(points, min_non_zero_data_samples);
+        filter_out_input_points(points, filtered_points, min_non_zero_data_samples);
     }
 
     time_profile.stop_timer("Input point filtering");
 
     _log(logINFO) << "Finished input points processing";
     
-    _log(logINFO) << "Number of points after filtering: " << points.size();
+    _log(logINFO) << "Number of points after filtering: " << filtered_points.size();
     
     //
     //Run Canopy Clustering
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_fp, show_progress_bar, time_profile);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_fp, show_progress_bar, time_profile);
 
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 
