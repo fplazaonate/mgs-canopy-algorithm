@@ -12,6 +12,7 @@
 #include <CanopyClustering.hpp>
 #include <Log.hpp>
 
+#include <signal_handlers.hpp>
 #include <prog_bar_misc.hpp>
 
 Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_neighbour_dist, double max_close_dist, bool set_close_points){
@@ -102,7 +103,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp, bool show_progress_bar, TimeProfile& time_profile){
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
 
     _log(logINFO) << "";
     _log(logINFO) << "General:";
@@ -127,6 +128,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
     _log(logPROGRESS) << "";
     _log(logPROGRESS) << "############ Creating Canopies ############";
+
     boost::unordered_set<Point*> marked_points;//Points that should not be investigated as origins
     vector<unsigned int> canopy_size_per_origin_num;//Contains size of the canopy created from origin by it's number, so first origin gave canopy of size 5, second origin gave canopy of size 8 and so on
     int num_of_consecutive_canopies_of_size_1 = 0;
@@ -137,19 +139,24 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     vector<Point*> close_points;
     close_points.reserve(points.size());
 
-    
-
-
-
     //
     //Create canopies
     //
     time_profile.start_timer("Clustering");
         
+    ofstream canopy_size_stats_file;
+
+    if(canopy_size_stats_fp != "")
+        canopy_size_stats_file.open(canopy_size_stats_fp.c_str(), ios::out | ios::trunc);
+
+    int canopy_stats_row_num = 0;
+
     int num_canopy_jumps = 0;
+    int num_collisions = 0;
 
+    int first_non_processed_origin_due_interruption = points.size();
 
-#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps, canopy_size_per_origin_num, num_of_consecutive_canopies_of_size_1) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, last_progress_displayed_at_num_points) schedule(dynamic)
+#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps, canopy_size_per_origin_num, num_of_consecutive_canopies_of_size_1, num_collisions, canopy_stats_row_num, terminate_called, first_non_processed_origin_due_interruption) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, last_progress_displayed_at_num_points) schedule(dynamic)
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
 
         //Early stopping proportion of points
@@ -160,6 +167,20 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         if(num_of_consecutive_canopies_of_size_1 == stop_num_single_point_clusters){
             continue;
         }
+
+        //Stop if exit signal received
+        if(terminate_called){
+            if(first_non_processed_origin_due_interruption > origin_i){
+#pragma omp critical
+                first_non_processed_origin_due_interruption = origin_i;
+            }
+            continue;
+        }
+
+        Point* origin = points[origin_i]; 
+
+        if(marked_points.find(origin) != marked_points.end())
+            continue;
 
         //Show progress bar
         {
@@ -176,10 +197,6 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
 
 
-        Point* origin = points[origin_i]; 
-
-        if(marked_points.find(origin) != marked_points.end())
-            continue;
 
         {
             _log(logDEBUG) << "Unmarked points count: " << points.size() - marked_points.size() << " Marked points count: " << marked_points.size();
@@ -262,30 +279,45 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
                 }
 
                 //Statistics showing size of canopies per analyzed origin
-                canopy_size_per_origin_num.push_back(final_canopy->neighbours.size());
+                if(canopy_size_stats_file.is_open()){
+                    canopy_size_stats_file << canopy_stats_row_num++  << "\t" << points.size() - marked_points.size() << "\t" << final_canopy->neighbours.size() << "\t" << num_collisions << endl;
+                }
 
             } else {
+                num_collisions++;
                 delete final_canopy;
             }
 
         }
 
     }
-    time_profile.stop_timer("Clustering");
+    if(canopy_size_stats_file.is_open())
+        canopy_size_stats_file.close();
 
-    //Save canopy size statistics if requested
-    if(canopy_size_stats_fp != ""){
-        try{
-            ofstream canopy_size_stats_file;
-            canopy_size_stats_file.open(canopy_size_stats_fp.c_str(), ios::out | ios::trunc);
-            BOOST_FOREACH(int canopy_size, canopy_size_per_origin_num){
-                canopy_size_stats_file << canopy_size << endl;
+    time_profile.stop_timer("Clustering");
+    
+    if(terminate_called && (not_processed_points_fp != "")){
+        time_profile.start_timer("Saving unprocessed points file");
+        _log(logERR) << "Received signal, clustering was stopped early, saving non processed points in file: " << not_processed_points_fp; 
+        cout << "first_non_processed_origin_due_interruption:" << first_non_processed_origin_due_interruption << endl; 
+
+        ofstream not_processed_points_file;
+        not_processed_points_file.open(not_processed_points_fp.c_str(), ios::out | ios::trunc);
+        for(int i = first_non_processed_origin_due_interruption; i < points.size(); i++){
+            Point* point = points[i];
+            if(marked_points.find(point) == marked_points.end()){
+                not_processed_points_file << point->id;
+                for(int j = 0; j < point->num_data_samples; j++){
+                    not_processed_points_file << "\t" << point->sample_data[j];
+                }
+                not_processed_points_file << endl;
             }
-            canopy_size_stats_file.close();
-        } catch (ios_base::failure){
-            _log(logWARN) << "Error occured when trying to save canopy statistics to: " << canopy_size_stats_fp << ". I will skip this task.";
         }
+        not_processed_points_file.close();
+        _log(logERR) << "Unprocessed points saved"; 
+        time_profile.stop_timer("Saving unprocessed points file");
     }
+
 
     _log(logINFO) << "";
     _log(logINFO) << "Avg. number of canopy jumps: " << num_canopy_jumps/(double)canopy_vector.size();

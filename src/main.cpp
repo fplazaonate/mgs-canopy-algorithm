@@ -21,10 +21,12 @@
 #include <CanopyClustering.hpp>
 #include <Log.hpp>
 #include <program_options_misc.hpp>
+#include <signal_handlers.hpp>
 
 using namespace std;
 using namespace boost::program_options;
 using namespace boost::assign;
+
 
 
 int main(int argc, char* argv[])
@@ -35,6 +37,7 @@ int main(int argc, char* argv[])
     
     //Set initial logging level
     log_level = logINFO;
+
 
     //Preapre Time Profile
     TimeProfile time_profile;
@@ -57,8 +60,10 @@ int main(int argc, char* argv[])
     double stop_proportion_of_points;
     int stop_num_single_point_clusters;
     string canopy_size_stats_fp;
+    string not_processed_points_fp;
     bool show_progress_bar;
     bool print_time_statistics;
+    bool die_on_kill;
 
 
     //Define and read command line options
@@ -97,9 +102,11 @@ int main(int argc, char* argv[])
         ("stop_on_num_single_point_clusters", value<int>(&stop_num_single_point_clusters)->default_value(1000), "Stop clustering when X consecutive clusters had only one point in them");
 
     misc_options_desc.add_options()
-        ("save_canopy_size_statistics", value<string>(&canopy_size_stats_fp)->default_value(""), "Provide path to file to which statistics of canopy size vs number of canopies created will be saved")
+        ("die_on_kill", bool_switch(&die_on_kill), "If set after receiving KILL signal, the program will die.By default clustering will stop but clusters will be merged and partial results will be printed as usual")
+        ("not_processed_points_fp", value<string>(&not_processed_points_fp)->default_value(""), "Provide path to file to which unprocessed origins will be dumped at KILL signal")
         ("print_time_statistics,t", bool_switch(&print_time_statistics), "Print wall clock time profiles of various analysis parts. This is not aggressive and won't increase compuatation time.")
         ("show_progress_bar,b", bool_switch(&show_progress_bar), "Show progress bar, nice if output is printed to console, don't use if you are redirecting to a file. Verbosity must be set to at least PROGRESS for it to have an effect.") 
+        ("canopy_size_stats_fp", value<string>(&canopy_size_stats_fp)->default_value(""), "If set, to this file current progress after each processed origin will be dumped in format <index> <num_left_origins> <this_canopy_size> <total_num_collisions>")
         ("help", "write help message");
 
     all_options_desc.add(general_options_desc).add(algorithm_param_options_desc).add(filter_in_options_desc).add(filter_out_options_desc).add(early_stop_options_desc).add(misc_options_desc);
@@ -142,7 +149,9 @@ int main(int argc, char* argv[])
     check_if_within_bounds("stop_num_single_point_clusters",stop_num_single_point_clusters,0,10000000);
     if(canopy_size_stats_fp != "")
         check_if_file_is_writable("canopy_size_stats_fp",canopy_size_stats_fp);
-
+    if(not_processed_points_fp!= "")
+        check_if_file_is_writable("not_processed_points_fp",not_processed_points_fp);
+       
     //
     //Set user chosen logging level
     //
@@ -162,6 +171,11 @@ int main(int argc, char* argv[])
 
     
 
+    //Set signal handler
+    if(die_on_kill) 
+        signal(SIGINT, signal_callback_die_handler);
+    else    
+        signal(SIGINT, signal_callback_gentle_handler);
 
     //
     //Parse point description file
@@ -238,7 +252,7 @@ int main(int argc, char* argv[])
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_fp, show_progress_bar, time_profile);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_fp, not_processed_points_fp, show_progress_bar, time_profile);
 
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 

@@ -18,8 +18,8 @@ COMP = $(GNU_COMP)
 COMP_OPENMP = $(GNU_OPENMP)
 endif
 
-#ADDITIONAL_OPTS = -p -g 
-ADDITIONAL_OPTS = -O3 -msse4.2 
+ADDITIONAL_OPTS = -p -g 
+#ADDITIONAL_OPTS = -O3 -msse4.2 
 
 INCLUDES = -I./ -I/opt/local/include #Add path to local boost here if needed
 
@@ -33,7 +33,7 @@ ADDITIONAL_FILES_TO_BE_DELETED =
 
 ### EXECUTABLE
 
-$(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o 
+$(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o signal_handlers.o TimeProfile.o
 	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $(LIBS) $^
 
 $(TEST_EXECUTABLE_NAME): main_test.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o 
@@ -55,6 +55,12 @@ CanopyClustering.o: CanopyClustering.cpp
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 Stats.o: Stats.cpp 
+	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
+
+TimeProfile.o: TimeProfile.cpp 
+	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
+
+signal_handlers.o: signal_handlers.cpp 
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 Log.o: Log.cpp 

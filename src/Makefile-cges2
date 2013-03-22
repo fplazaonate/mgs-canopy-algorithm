@@ -32,7 +32,7 @@ ADDITIONAL_FILES_TO_BE_DELETED =
 
 ### EXECUTABLE
 
-$(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o TimeProfile.o
+$(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o signal_handlers.o TimeProfile.o
 	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $^ $(LIBS) 
 
 $(TEST_EXECUTABLE_NAME): main_test.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o 
@@ -57,6 +57,9 @@ Stats.o: Stats.cpp
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 TimeProfile.o: TimeProfile.cpp 
+	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
+
+signal_handlers.o: signal_handlers.cpp 
 	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
 
 Log.o: Log.cpp 
