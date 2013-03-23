@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
 
     //Prepare variables for command line input
     string point_input_file;
-    string output_file_path;
-    string output_centers_file_path;
+    string output_file;
+    string output_centers_file;
     string output_cluster_prefix;
     int num_threads;
     double max_canopy_dist;
@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
     double max_single_data_point_proportion;
     double stop_proportion_of_points;
     int stop_num_single_point_clusters;
-    string canopy_size_stats_fp;
-    string not_processed_points_fp;
+    string canopy_size_stats_file;
+    string not_processed_points_file;
     bool show_progress_bar;
     bool print_time_statistics;
     bool die_on_kill;
@@ -78,8 +78,8 @@ int main(int argc, char* argv[])
 
     general_options_desc.add_options()
         ("point_input_file,i", value<string>(&point_input_file), "Point input file")
-        ("output_file_path,o", value<string>(&output_file_path), "Provide path to file to which clusters will be written")
-        ("output_centers_file_path,c", value<string>(&output_centers_file_path), "Provide path to file to which cluster centers will be written")
+        ("output_file,o", value<string>(&output_file), "Provide path to file to which clusters will be written")
+        ("output_centers_file,c", value<string>(&output_centers_file), "Provide path to file to which cluster centers will be written")
         ("output_clusters_prefix,p", value<string>(&output_cluster_prefix)->default_value("MGU"), "Provide path to file to which cluster centers will be written")
         ("num_threads,n", value<int>(&num_threads)->default_value(4), "IMPORTANT! Number of cpu threads to use.")
         ("verbosity,v", value<string>(&verbosity_option)->default_value("info"), "Control how much information should be printed to the scree. Available levels according to their verbosity: error, progress, warn, info, debug, debug1.");
@@ -103,18 +103,18 @@ int main(int argc, char* argv[])
 
     misc_options_desc.add_options()
         ("die_on_kill", bool_switch(&die_on_kill), "If set after receiving KILL signal, the program will die.By default clustering will stop but clusters will be merged and partial results will be printed as usual")
-        ("not_processed_points_fp", value<string>(&not_processed_points_fp)->default_value(""), "Provide path to file to which unprocessed origins will be dumped at KILL signal")
+        ("not_processed_points_file", value<string>(&not_processed_points_file)->default_value(""), "Provide path to file to which unprocessed origins will be dumped at KILL signal")
         ("print_time_statistics,t", bool_switch(&print_time_statistics), "Print wall clock time profiles of various analysis parts. This is not aggressive and won't increase compuatation time.")
         ("show_progress_bar,b", bool_switch(&show_progress_bar), "Show progress bar, nice if output is printed to console, don't use if you are redirecting to a file. Verbosity must be set to at least PROGRESS for it to have an effect.") 
-        ("canopy_size_stats_fp", value<string>(&canopy_size_stats_fp)->default_value(""), "If set, to this file current progress after each processed origin will be dumped in format <index> <num_left_origins> <this_canopy_size> <total_num_collisions>")
+        ("canopy_size_stats_file", value<string>(&canopy_size_stats_file)->default_value(""), "If set, to this file current progress after each processed origin will be dumped in format <index> <num_left_origins> <this_canopy_size> <total_num_collisions>")
         ("help", "write help message");
 
     all_options_desc.add(general_options_desc).add(algorithm_param_options_desc).add(filter_in_options_desc).add(filter_out_options_desc).add(early_stop_options_desc).add(misc_options_desc);
 
     positional_options_description command_line_positional_desc;
     command_line_positional_desc.add("point_input_file",1);
-    command_line_positional_desc.add("output_file_path",2);
-    command_line_positional_desc.add("output_centers_file_path",3);
+    command_line_positional_desc.add("output_file",1);
+    command_line_positional_desc.add("output_centers_file",1);
 
     variables_map command_line_variable_map;
     store(command_line_parser(argc,argv).options(all_options_desc).positional(command_line_positional_desc).run(), command_line_variable_map);
@@ -131,8 +131,8 @@ int main(int argc, char* argv[])
     }
 
     check_if_file_is_readable("point_input_file",point_input_file);
-    check_if_file_is_writable("output_file_path",output_file_path);
-    check_if_file_is_writable("output_centers_file_path",output_file_path);
+    check_if_file_is_writable("output_file",output_file);
+    check_if_file_is_writable("output_centers_file",output_centers_file);
     vector<string> valid_verbosities;
     valid_verbosities += "error", "progress", "warn", "info", "debug", "debug1", "debug2";
     check_if_one_of("verbosity_option",verbosity_option, valid_verbosities);
@@ -147,10 +147,10 @@ int main(int argc, char* argv[])
     check_if_within_bounds("max_single_data_point_proportion",max_single_data_point_proportion,0.0,1.0);
     check_if_within_bounds("stop_proportion_of_points",stop_proportion_of_points,0.0,1.0);
     check_if_within_bounds("stop_num_single_point_clusters",stop_num_single_point_clusters,0,10000000);
-    if(canopy_size_stats_fp != "")
-        check_if_file_is_writable("canopy_size_stats_fp",canopy_size_stats_fp);
-    if(not_processed_points_fp!= "")
-        check_if_file_is_writable("not_processed_points_fp",not_processed_points_fp);
+    if(canopy_size_stats_file != "")
+        check_if_file_is_writable("canopy_size_stats_file",canopy_size_stats_file);
+    if(not_processed_points_file!= "")
+        check_if_file_is_writable("not_processed_points_file",not_processed_points_file);
        
     //
     //Set user chosen logging level
@@ -169,6 +169,13 @@ int main(int argc, char* argv[])
         log_level = logDEBUG1;
     }
 
+    _log(logINFO) << "";
+    _log(logINFO) << "Files:";
+    _log(logINFO) << "point_input_file:\t " << point_input_file;
+    _log(logINFO) << "output_centers_file:\t " << output_centers_file;
+    _log(logINFO) << "canopy_size_stats_file:\t " << canopy_size_stats_file;
+    _log(logINFO) << "not_processed_points_file:\t " << not_processed_points_file;
+    _log(logINFO) << "";
     
 
     //Set signal handler
@@ -219,6 +226,7 @@ int main(int argc, char* argv[])
             points.push_back(new Point(line_start_ptr));
         }
         line_start_ptr = ++line_end_ptr;
+        die_if_true(terminate_called);
     }
 
     time_profile.stop_timer("Reading points");
@@ -237,6 +245,7 @@ int main(int argc, char* argv[])
 
     time_profile.start_timer("Input point filtering");
     if(min_non_zero_data_samples > 0){
+        die_if_true(terminate_called);
         _log(logINFO) << "Filtering points";
         filter_out_input_points(points, filtered_points, min_non_zero_data_samples);
     }
@@ -247,12 +256,13 @@ int main(int argc, char* argv[])
     
     _log(logINFO) << "Number of points after filtering: " << filtered_points.size();
     
+    die_if_true(terminate_called);
     //
     //Run Canopy Clustering
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_fp, not_processed_points_fp, show_progress_bar, time_profile);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_file, not_processed_points_file, show_progress_bar, time_profile);
 
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 
@@ -278,7 +288,7 @@ int main(int argc, char* argv[])
 
     _log(logPROGRESS) << "";
     _log(logPROGRESS) << "####################Writing Results####################" ;
-    ofstream output_file;
+    ofstream out_file;
 
     sort(canopies.begin(), canopies.end(), compare_canopy_ptrs);
 
@@ -287,29 +297,29 @@ int main(int argc, char* argv[])
 
 
     int i =0;
-    output_file.open(output_file_path.c_str(), ios::out | ios::trunc);
+    out_file.open(output_file.c_str(), ios::out | ios::trunc);
     BOOST_FOREACH(Canopy* c, canopies){
         BOOST_FOREACH(Point* p, c->neighbours){
-            output_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
-            output_file << p->id << endl;
+            out_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
+            out_file << p->id << endl;
         }
         i++;
     }
-    output_file.close();
+    out_file.close();
 
     i=0;
-    output_file.open(output_centers_file_path.c_str(), ios::out | ios::trunc);
+    out_file.open(output_centers_file.c_str(), ios::out | ios::trunc);
     BOOST_FOREACH(Canopy* c, canopies){
-        output_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
+        out_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
         
         for(int j=0; j < c->center->num_data_samples; j++){
-            output_file << c->center->sample_data[j] << "\t" ;
+            out_file << c->center->sample_data[j] << "\t" ;
         }
 
         i++;
-        output_file << endl;
+        out_file << endl;
     }
-    output_file.close();
+    out_file.close();
 
     BOOST_FOREACH(Canopy* c, canopies)
         delete c;

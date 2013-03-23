@@ -9,4 +9,6 @@ extern int terminate_called;
 void signal_callback_gentle_handler(int signum);
 void signal_callback_die_handler(int signum);
 
+void die_if_true(int terminate_called);
+
 #endif

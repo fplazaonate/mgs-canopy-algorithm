@@ -15,3 +15,8 @@ void signal_callback_die_handler(int signum){
     _log(logERR) << "Received signal: " << signum << " Bye! Bye!";
     exit(1);
 }
+
+void die_if_true(int terminate_called){
+    if(terminate_called)
+        exit(1);
+}
