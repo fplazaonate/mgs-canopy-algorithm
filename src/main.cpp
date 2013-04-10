@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
         ("point_input_file,i", value<string>(&point_input_file), "Point input file")
         ("output_file,o", value<string>(&output_file), "Provide path to file to which clusters will be written")
         ("output_centers_file,c", value<string>(&output_centers_file), "Provide path to file to which cluster centers will be written")
-        ("output_clusters_prefix,p", value<string>(&output_cluster_prefix)->default_value("MGU"), "Provide path to file to which cluster centers will be written")
+        ("output_clusters_prefix,p", value<string>(&output_cluster_prefix)->default_value("CAG"), "Provide path to file to which cluster centers will be written")
         ("num_threads,n", value<int>(&num_threads)->default_value(4), "IMPORTANT! Number of cpu threads to use.")
         ("verbosity,v", value<string>(&verbosity_option)->default_value("info"), "Control how much information should be printed to the scree. Available levels according to their verbosity: error, progress, warn, info, debug, debug1.");
 

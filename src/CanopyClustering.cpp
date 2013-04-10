@@ -365,10 +365,12 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         if( canopies_to_merge.size() > 1 ){
 
             vector<Point*> all_points_from_merged_canopies;
-
+            
             BOOST_FOREACH(Canopy* canopy, canopies_to_merge){
                 BOOST_FOREACH(Point* n, canopy->neighbours){
-                    all_points_from_merged_canopies.push_back(n);
+                    if(std::find(all_points_from_merged_canopies.begin(), all_points_from_merged_canopies.end(), n) == all_points_from_merged_canopies.end()){ //If the element hasn't been added already
+                        all_points_from_merged_canopies.push_back(n);
+                    }
                 }
             }
 
