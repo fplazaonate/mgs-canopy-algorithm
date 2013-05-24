@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
         ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1), "Max distance between a canopy center and a point in which the point belongs to the canopy")
         ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4), "Max distance between a canopy center and a point in which the point will be considered close to the canopy")
         ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.03), "Max distance between two canopy centers in which the canopies should be merged")
-        ("min_step_dist", value<double>(&min_step_dist)->default_value(0.1), "Min distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy");
+        ("min_step_dist", value<double>(&min_step_dist)->default_value(0.03), "Min distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy");
 
     filter_in_options_desc.add_options()
         ("filter_min_non_zero_data_points", value<int>(&min_non_zero_data_samples)->default_value(3), "Use in the analysis only those points that have at least N non zero data points. Setting it to 0 will disable the filter");
