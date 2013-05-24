@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
     double min_step_dist;
     string verbosity_option;
     int min_non_zero_data_samples;
+    double max_top_three_data_point_proportion;
     int min_num_non_zero_medians;
     double max_single_data_point_proportion;
     double stop_proportion_of_points;
@@ -91,7 +92,8 @@ int main(int argc, char* argv[])
         ("min_step_dist", value<double>(&min_step_dist)->default_value(0.03), "Min distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy");
 
     filter_in_options_desc.add_options()
-        ("filter_min_non_zero_data_points", value<int>(&min_non_zero_data_samples)->default_value(3), "Use in the analysis only those points that have at least N non zero data points. Setting it to 0 will disable the filter");
+        ("filter_min_non_zero_data_points", value<int>(&min_non_zero_data_samples)->default_value(3), "Use in the analysis only those points that have at least N non zero data points. Setting it to 0 will disable the filter")
+        ("check_if_num_non_zero_samples_is_greater_than_x", value<double>(&max_top_three_data_point_proportion)->default_value(0.9), "Use in the analysis only those points the 3 top data points of which account to less than X proportion of the sum of all data points. Setting it to 1 will disable the filter");
 
     filter_out_options_desc.add_options()
         ("filter_zero_medians", value<int>(&min_num_non_zero_medians)->default_value(4), "Return only those canopies that have at least N non-zero medians. Setting it to 0 will disable the filter.")
@@ -143,6 +145,7 @@ int main(int argc, char* argv[])
     check_if_within_bounds("min_step_dist",min_step_dist,0.0,1.0);
 
     check_if_within_bounds("min_non_zero_data_samples",min_non_zero_data_samples,0,10000);
+    check_if_within_bounds("max_top_three_data_point_proportion",max_top_three_data_point_proportion,0.0,1.0);
     check_if_within_bounds("min_num_non_zero_medians",min_num_non_zero_medians,0,10000);
     check_if_within_bounds("max_single_data_point_proportion",max_single_data_point_proportion,0.0,1.0);
     check_if_within_bounds("stop_proportion_of_points",stop_proportion_of_points,0.0,1.0);
@@ -244,10 +247,29 @@ int main(int argc, char* argv[])
 
 
     time_profile.start_timer("Input point filtering");
-    if(min_non_zero_data_samples > 0){
-        die_if_true(terminate_called);
-        _log(logINFO) << "Filtering points";
-        filter_out_input_points(points, filtered_points, min_non_zero_data_samples);
+
+#pragma omp parallel for 
+    for(int i = 0; i < points.size(); i++){
+        if((min_non_zero_data_samples > 0) && (max_top_three_data_point_proportion < 0.9999)){
+            if( 
+                    points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples)  &&
+                    points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion) 
+              )
+            {
+#pragma omp critical
+                filtered_points.push_back(points[i]);
+            }
+        } else if (min_non_zero_data_samples > 0){ 
+            if(points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples)){
+#pragma omp critical
+                filtered_points.push_back(points[i]);
+            }
+        } else if (max_top_three_data_point_proportion < 0.9999){ 
+            if(points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion)){ 
+#pragma omp critical
+                filtered_points.push_back(points[i]);
+            }
+        }
     }
 
     time_profile.stop_timer("Input point filtering");

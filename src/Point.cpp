@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <functional>
+#include <numeric>
 
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
@@ -75,8 +76,8 @@ Point::~Point(){
     delete sample_data_pearson_precomputed;
 }
 
-bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
 
+bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
     int num_non_zero_samples = 0;
     for(int i=0; i < num_data_samples; i++){
         if(sample_data[i] > 0.0000001){
@@ -86,6 +87,23 @@ bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
         }
     }
     return false;
+
+}
+
+bool Point::check_if_top_three_point_proportion_is_smaller_than(double x){
+
+    vector<double> temp_data_samples;
+    temp_data_samples.reserve(num_data_samples);
+    std::copy(sample_data, sample_data + num_data_samples, temp_data_samples.begin());
+
+    std::sort(temp_data_samples.begin(), temp_data_samples.end());
+    std::reverse(temp_data_samples.begin(), temp_data_samples.end());
+
+    double sum_data_samples = std::accumulate(sample_data, sample_data + num_data_samples, 0 );
+    double sum_top_three = temp_data_samples[0] + temp_data_samples[1] + temp_data_samples[2]; 
+
+    return (sum_top_three / sum_data_samples) < x;
+
 }
 
 bool Point::check_if_single_point_proportion_is_smaller_than(double x){
@@ -180,19 +198,6 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
     precompute_pearson_data(centroid->num_data_samples, centroid->sample_data, centroid->sample_data_pearson_precomputed);
     
     return centroid;
-}
-
-
-void filter_out_input_points(vector<Point*>& points, vector<Point*>& filtered_points, int min_non_zero_data_samples){
-
-#pragma omp parallel for 
-    for(int i = 0; i < points.size(); i++){
-        if( points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples) ){
-#pragma omp critical
-            filtered_points.push_back(points[i]);
-        }
-    }
-
 }
 
 
