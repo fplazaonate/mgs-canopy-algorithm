@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
     bool show_progress_bar;
     bool print_time_statistics;
     bool die_on_kill;
+    int max_num_canopy_walks;
 
 
     //Define and read command line options
@@ -89,7 +90,8 @@ int main(int argc, char* argv[])
         ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1), "Max distance between a canopy center and a point in which the point belongs to the canopy")
         ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4), "Max distance between a canopy center and a point in which the point will be considered close to the canopy")
         ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.03), "Max distance between two canopy centers in which the canopies should be merged")
-        ("min_step_dist", value<double>(&min_step_dist)->default_value(0.03), "Min distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy");
+        ("min_step_dist", value<double>(&min_step_dist)->default_value(0.03), "Min distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy(canopy walk)")
+        ("max_num_canopy_walks", value<int>(&max_num_canopy_walks)->default_value(3), "Max number of times the canopy will walk");
 
     filter_in_options_desc.add_options()
         ("filter_min_non_zero_data_points", value<int>(&min_non_zero_data_samples)->default_value(3), "Use in the analysis only those points that have at least N non zero data points. Setting it to 0 will disable the filter")
@@ -143,6 +145,7 @@ int main(int argc, char* argv[])
     check_if_within_bounds("max_close_dist",max_close_dist,0.0,1.0);
     check_if_within_bounds("max_merge_dist",max_merge_dist,0.0,1.0);
     check_if_within_bounds("min_step_dist",min_step_dist,0.0,1.0);
+    check_if_within_bounds("max_num_canopy_walks",max_num_canopy_walks,0,100);
 
     check_if_within_bounds("min_non_zero_data_samples",min_non_zero_data_samples,0,10000);
     check_if_within_bounds("max_top_three_data_point_proportion",max_top_three_data_point_proportion,0.0,1.0);
@@ -235,11 +238,15 @@ int main(int argc, char* argv[])
     time_profile.stop_timer("Reading points");
 
     _log(logINFO) << "Points read, dropping file from memory";
+    _log(logINFO) << "";
 
     /* drop the file from memory*/
     munmap(point_file_mmap, statbuf.st_size);
     
     _log(logINFO) << "Running basic validation of points";
+    _log(logINFO) << "max_top_three_data_point_proportion:\t " << max_top_three_data_point_proportion;
+    _log(logINFO) << "min_non_zero_data_samples:\t " << min_non_zero_data_samples;
+    _log(logINFO) << "";
 
     time_profile.start_timer("Point validation");
     verify_proper_point_input_or_die(points);
@@ -284,7 +291,7 @@ int main(int argc, char* argv[])
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_file, not_processed_points_file, show_progress_bar, time_profile);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, max_num_canopy_walks, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_file, not_processed_points_file, show_progress_bar, time_profile);
 
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 

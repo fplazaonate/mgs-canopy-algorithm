@@ -103,7 +103,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
 
     _log(logINFO) << "";
     _log(logINFO) << "General:";
@@ -114,6 +114,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     _log(logINFO) << "max_close_dist:\t " << max_close_dist;
     _log(logINFO) << "max_merge_dist:\t " << max_merge_dist;
     _log(logINFO) << "min_step_dist:\t " << min_step_dist;
+    _log(logINFO) << "max_num_canopy_walks:\t " << max_num_canopy_walks;
     _log(logINFO) << "";
     _log(logINFO) << "Early stopping:";
     _log(logINFO) << "stop_proportion_of_points:\t " << stop_proportion_of_points;
@@ -229,9 +230,12 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         }
         
 
-        while(dist > min_step_dist){
+        int num_canopy_jumps_local = 0;
+        while((dist > min_step_dist) && (max_num_canopy_walks <= num_canopy_jumps_local)){
             delete c1;
             c1=c2;
+
+            num_canopy_jumps_local++; 
 
 #pragma omp atomic
             num_canopy_jumps++;
