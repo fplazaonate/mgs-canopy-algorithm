@@ -173,7 +173,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         if(terminate_called){
             if(first_non_processed_origin_due_interruption > origin_i){
 #pragma omp critical
-                first_non_processed_origin_due_interruption = origin_i;
+                {
+                    first_non_processed_origin_due_interruption = origin_i;
+                }
             }
             continue;
         }
