@@ -106,9 +106,6 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
 
     _log(logINFO) << "";
-    _log(logINFO) << "General:";
-    _log(logINFO) << "num_threads:\t " << num_threads;
-    _log(logINFO) << "";
     _log(logINFO) << "Algorithm Parameters:";
     _log(logINFO) << "max_canopy_dist:\t " << max_canopy_dist;
     _log(logINFO) << "max_close_dist:\t " << max_close_dist;

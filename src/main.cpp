@@ -23,6 +23,8 @@
 #include <program_options_misc.hpp>
 #include <signal_handlers.hpp>
 
+#include <omp.h>
+
 using namespace std;
 using namespace boost::program_options;
 using namespace boost::assign;
@@ -189,6 +191,14 @@ int main(int argc, char* argv[])
         signal(SIGINT, signal_callback_die_handler);
     else    
         signal(SIGINT, signal_callback_gentle_handler);
+
+    //Set number of threads
+    _log(logINFO) << "";
+    _log(logINFO) << "General:";
+    _log(logINFO) << "num_threads:\t " << num_threads;
+    _log(logINFO) << "";
+
+    omp_set_num_threads(num_threads);
 
     //
     //Parse point description file
