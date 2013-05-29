@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
     BOOST_FOREACH(Canopy* c, canopies){
         BOOST_FOREACH(Point* p, c->neighbours){
             out_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
-            out_file << p->id << endl;
+            out_file << p->id << "\n";
         }
         i++;
     }
@@ -356,7 +356,7 @@ int main(int argc, char* argv[])
         }
 
         i++;
-        out_file << endl;
+        out_file << "\n";
     }
     out_file.close();
 

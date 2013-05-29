@@ -313,7 +313,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
                 for(int j = 0; j < point->num_data_samples; j++){
                     not_processed_points_file << "\t" << point->sample_data[j];
                 }
-                not_processed_points_file << endl;
+                not_processed_points_file << "\n";
             }
         }
         not_processed_points_file.close();
