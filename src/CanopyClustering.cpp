@@ -380,7 +380,11 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
                 }
             }
 
-            Canopy* merged_canopy = new Canopy(all_points_from_merged_canopies);
+
+            //Create new canopy
+            Point* temp_merged_canopy_origin = get_centroid_of_points(all_points_from_merged_canopies);
+            Canopy* merged_canopy = create_canopy(temp_merged_canopy_origin, all_points_from_merged_canopies, all_points_from_merged_canopies, max_canopy_dist, max_close_dist, false);
+            delete temp_merged_canopy_origin;
 
             canopy_vector.push_back(merged_canopy);
 
