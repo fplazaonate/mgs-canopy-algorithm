@@ -329,7 +329,7 @@ int main(int argc, char* argv[])
     _log(logPROGRESS) << "####################Writing Results####################" ;
     ofstream out_file;
 
-    sort(canopies.begin(), canopies.end(), compare_canopy_ptrs);
+    sort(canopies.begin(), canopies.end(), compare_canopy_ptrs_by_canopy_size);
 
     int num_digits = ceil(log10(canopies.size()));
     cout << std::setfill('0');

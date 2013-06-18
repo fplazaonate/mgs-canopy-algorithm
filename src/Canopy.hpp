@@ -18,10 +18,10 @@ class Canopy {
         std::vector<Point*> neighbours;
 
         friend std::ostream& operator<<(std::ostream& ost, const Canopy& c);
-        friend bool compare_canopy_ptrs(const Canopy* a, const Canopy* b);
+        friend bool compare_canopy_ptrs_by_canopy_size(const Canopy* a, const Canopy* b);
 };
 
-bool compare_canopy_ptrs(const Canopy* a, const Canopy* b);
+bool compare_canopy_ptrs_by_canopy_size(const Canopy* a, const Canopy* b);
 
 
 #endif
