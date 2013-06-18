@@ -321,6 +321,12 @@ int main(int argc, char* argv[])
         time_profile.stop_timer("Filtering canopies by single point bias");
     }
 
+    {
+        time_profile.start_timer("Filtering canopies by size");
+        CanopyClusteringAlg::filter_clusters_by_size(canopies);
+        _log(logINFO) << "Finished filtering by size(number of neighbours must be bigger than 1), number of canopies:" << canopies.size();
+        time_profile.stop_timer("Filtering canopies by size");
+    }
 
     _log(logPROGRESS) << "";
     _log(logPROGRESS) << "####################Writing Results####################" ;

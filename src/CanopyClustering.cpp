@@ -63,6 +63,25 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
 
 }
 
+void CanopyClusteringAlg::filter_clusters_by_size(std::vector<Canopy*>& canopies_to_filter){
+
+    vector<int> canopy_indexes_to_remove;
+
+    for(int i=0; i < canopies_to_filter.size(); i++){
+        Canopy* canopy = canopies_to_filter[i];
+        if(canopy->neighbours.size() < 2){
+            canopy_indexes_to_remove.push_back(i);
+        }
+    }
+
+    std::sort(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
+    std::reverse(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
+
+    for(int i=0; i < canopy_indexes_to_remove.size(); i++)
+        canopies_to_filter.erase(canopies_to_filter.begin() + canopy_indexes_to_remove[i]);
+
+}
+
 void CanopyClusteringAlg::filter_clusters_by_single_point_skew(double max_single_data_point_proportion, std::vector<Canopy*>& canopies_to_filter){
 
     vector<int> canopy_indexes_to_remove;

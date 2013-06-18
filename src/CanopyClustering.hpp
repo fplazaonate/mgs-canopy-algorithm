@@ -17,6 +17,7 @@ class CanopyClusteringAlg{
 
         static void filter_clusters_by_zero_medians(int min_num_non_zero_medians, vector<Canopy*>& canopies_to_filter);
         static void filter_clusters_by_single_point_skew(double max_single_data_point_proportion, vector<Canopy*>& canopies_to_filter);
+        static void filter_clusters_by_size(std::vector<Canopy*>& canopies_to_filter);
 };
 
 #endif 
