@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
     //Verify command line input parameters
     //
     //verify_input_correctness(all_options_desc, command_line_variable_map);
-    if (command_line_variable_map.count("help")) {
+    if (command_line_variable_map.count("help") || argc < 3) {
         cout << "Usage: cc.bin [options] POINTS_INPUT_FILE CLUSTERS_OUTPUT_FILE" << endl << endl;;
         cout << all_options_desc<< "\n";
         exit(1);
