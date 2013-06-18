@@ -81,38 +81,38 @@ int main(int argc, char* argv[])
 
 
     general_options_desc.add_options()
-        ("point_input_file,i", value<string>(&point_input_file), "Point input file")
-        ("output_file,o", value<string>(&output_file), "Provide path to file to which clusters will be written")
-        ("output_centers_file,c", value<string>(&output_centers_file), "Provide path to file to which cluster centers will be written")
-        ("output_clusters_prefix,p", value<string>(&output_cluster_prefix)->default_value("CAG"), "Provide path to file to which cluster centers will be written")
+        ("input_file_path,i", value<string>(&point_input_file), "Path to the input file")
+        ("output_clusters_file_path,o", value<string>(&output_file), "Path to file to which clusters will be written")
+        ("output_cluster_profiles_file,c", value<string>(&output_centers_file), "Path to file to which cluster profiles will be written")
+        ("cluster_name_prefix,p", value<string>(&output_cluster_prefix)->default_value("CAG"), "Prefix prepended to output cluster names")
         ("num_threads,n", value<int>(&num_threads)->default_value(4), "IMPORTANT! Number of cpu threads to use.")
-        ("verbosity,v", value<string>(&verbosity_option)->default_value("info"), "Control how much information should be printed to the scree. Available levels according to their verbosity: error, progress, warn, info, debug, debug1.");
+        ("verbosity,v", value<string>(&verbosity_option)->default_value("info"), "Control how much information should be printed to the screen. Available levels according to their verbosity: error, progress, warn, info, debug, debug1.");
 
     algorithm_param_options_desc.add_options()
-        ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1), "Max distance between a canopy center and a point in which the point belongs to the canopy")
-        ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4), "Max distance between a canopy center and a point in which the point will be considered close to the canopy")
-        ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.03), "Max distance between two canopy centers in which the canopies should be merged")
-        ("min_step_dist", value<double>(&min_step_dist)->default_value(0.03), "Min distance between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy(canopy walk)")
-        ("max_num_canopy_walks", value<int>(&max_num_canopy_walks)->default_value(3), "Max number of times the canopy will walk");
+        ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1), "Max pearson correlation difference between a canopy center and a point included to the canopy")
+        ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4), "Max pearson correlation difference between a canopy center and a point in which the point will be considered close to the canopy. As a heuristc, only points within this distance will be considered as potential neighbours during the canopy walk.")
+        ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.05), "Max pearson correlation difference between two canopy centers in which the canopies should be merged.")
+        ("min_step_dist", value<double>(&min_step_dist)->default_value(0.01), "Min pearson correlation difference between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy (canopy walk). This is a stop criterion for canopy walk.")
+        ("max_num_canopy_walks", value<int>(&max_num_canopy_walks)->default_value(3), "Max number of times the canopy will walk. This is a stop criterion for canopy walk.");
 
     filter_in_options_desc.add_options()
-        ("filter_min_non_zero_data_points", value<int>(&min_non_zero_data_samples)->default_value(3), "Use in the analysis only those points that have at least N non zero data points. Setting it to 0 will disable the filter")
-        ("check_if_num_non_zero_samples_is_greater_than_x", value<double>(&max_top_three_data_point_proportion)->default_value(0.9), "Use in the analysis only those points the 3 top data points of which account to less than X proportion of the sum of all data points. Setting it to 1 will disable the filter");
+        ("filter_min_obs", value<int>(&min_non_zero_data_samples)->default_value(3), "Discard those points which have fewer than N non-zero data points (observations). Setting it to 0 will disable the filter.")
+        ("filter_max_dominant_obs", value<double>(&max_top_three_data_point_proportion)->default_value(0.9), "Discard those points for which top 3 data points constitute more than X fraction of the total signal. Setting it to 1 will disable the filter");
 
     filter_out_options_desc.add_options()
-        ("filter_zero_medians", value<int>(&min_num_non_zero_medians)->default_value(4), "Return only those canopies that have at least N non-zero medians. Setting it to 0 will disable the filter.")
-        ("filter_single_point", value<double>(&max_single_data_point_proportion)->default_value(0.9), "Don't return canopies containing a single median which divided by sum of all its medians is greater than X. Setting it to 1 disables the filter.");
+        ("filter_zero_medians", value<int>(&min_num_non_zero_medians)->default_value(3), "Return only those canopies that have at least N non-zero cluster profile observations. Setting it to 0 will disable the filter.")
+        ("filter_single_point", value<double>(&max_single_data_point_proportion)->default_value(0.9), "Don't return canopies containing a single profile observation which constitutes to more than X fraction of the total profile. Setting it to 1 disables the filter.");
 
     early_stop_options_desc.add_options()
-        ("stop_on_proportion_of_points_clustered", value<double>(&stop_proportion_of_points)->default_value(0.5), "Stop clustering when X*total_number_of_points were clustered")
         ("stop_on_num_single_point_clusters", value<int>(&stop_num_single_point_clusters)->default_value(1000), "Stop clustering when X consecutive clusters had only one point in them");
+        ("stop_fraction", value<double>(&stop_proportion_of_points)->default_value(1.0), "Stop clustering after X fraction of all points have been clustered. Setting it to 1 will disable this stop criterion.");
 
     misc_options_desc.add_options()
-        ("die_on_kill", bool_switch(&die_on_kill), "If set after receiving KILL signal, the program will die.By default clustering will stop but clusters will be merged and partial results will be printed as usual")
-        ("not_processed_points_file", value<string>(&not_processed_points_file)->default_value(""), "Provide path to file to which unprocessed origins will be dumped at KILL signal")
+        ("die_on_kill", bool_switch(&die_on_kill), "If set, after receiving a KILL signal, the program will die and no results will be produced. By default clustering will stop but clusters will be merged and partial results will be printed as usual.")
+        ("not_processed_points_file", value<string>(&not_processed_points_file)->default_value(""), "Path to file to which unprocessed origins will be dumped at KILL signal")
         ("print_time_statistics,t", bool_switch(&print_time_statistics), "Print wall clock time profiles of various analysis parts. This is not aggressive and won't increase compuatation time.")
         ("show_progress_bar,b", bool_switch(&show_progress_bar), "Show progress bar, nice if output is printed to console, don't use if you are redirecting to a file. Verbosity must be set to at least PROGRESS for it to have an effect.") 
-        ("canopy_size_stats_file", value<string>(&canopy_size_stats_file)->default_value(""), "If set, to this file current progress after each processed origin will be dumped in format <index> <num_left_origins> <this_canopy_size> <total_num_collisions>")
+        ("canopy_size_stats_file", value<string>(&canopy_size_stats_file)->default_value(""), "If set, to this file current progress after each processed origin will be dumped in format <index> <num_left_origins> <this_canopy_size> <total_num_thread_collisions>")
         ("help", "write help message");
 
     all_options_desc.add(general_options_desc).add(algorithm_param_options_desc).add(filter_in_options_desc).add(filter_out_options_desc).add(early_stop_options_desc).add(misc_options_desc);
