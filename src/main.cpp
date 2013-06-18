@@ -61,7 +61,6 @@ int main(int argc, char* argv[])
     int min_num_non_zero_medians;
     double max_single_data_point_proportion;
     double stop_proportion_of_points;
-    int stop_num_single_point_clusters;
     string canopy_size_stats_file;
     string not_processed_points_file;
     bool show_progress_bar;
@@ -104,7 +103,6 @@ int main(int argc, char* argv[])
         ("filter_single_point", value<double>(&max_single_data_point_proportion)->default_value(0.9), "Don't return canopies containing a single profile observation which constitutes to more than X fraction of the total profile. Setting it to 1 disables the filter.");
 
     early_stop_options_desc.add_options()
-        ("stop_on_num_single_point_clusters", value<int>(&stop_num_single_point_clusters)->default_value(1000), "Stop clustering when X consecutive clusters had only one point in them");
         ("stop_fraction", value<double>(&stop_proportion_of_points)->default_value(1.0), "Stop clustering after X fraction of all points have been clustered. Setting it to 1 will disable this stop criterion.");
 
     misc_options_desc.add_options()
@@ -154,7 +152,6 @@ int main(int argc, char* argv[])
     check_if_within_bounds("min_num_non_zero_medians",min_num_non_zero_medians,0,10000);
     check_if_within_bounds("max_single_data_point_proportion",max_single_data_point_proportion,0.0,1.0);
     check_if_within_bounds("stop_proportion_of_points",stop_proportion_of_points,0.0,1.0);
-    check_if_within_bounds("stop_num_single_point_clusters",stop_num_single_point_clusters,0,10000000);
     if(canopy_size_stats_file != "")
         check_if_file_is_writable("canopy_size_stats_file",canopy_size_stats_file);
     if(not_processed_points_file!= "")
@@ -301,7 +298,7 @@ int main(int argc, char* argv[])
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, max_num_canopy_walks, stop_proportion_of_points, stop_num_single_point_clusters, canopy_size_stats_file, not_processed_points_file, show_progress_bar, time_profile);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, max_num_canopy_walks, stop_proportion_of_points, canopy_size_stats_file, not_processed_points_file, show_progress_bar, time_profile);
 
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 

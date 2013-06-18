@@ -103,7 +103,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, int stop_num_single_point_clusters, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
 
     _log(logINFO) << "";
     _log(logINFO) << "Algorithm Parameters:";
@@ -115,7 +115,6 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     _log(logINFO) << "";
     _log(logINFO) << "Early stopping:";
     _log(logINFO) << "stop_proportion_of_points:\t " << stop_proportion_of_points;
-    _log(logINFO) << "stop_num_single_point_clusters:\t " << stop_num_single_point_clusters;
 
     _log(logPROGRESS) << "";
     _log(logPROGRESS) << "############ Shuffling ############";
@@ -129,7 +128,6 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
     boost::unordered_set<Point*> marked_points;//Points that should not be investigated as origins
     vector<unsigned int> canopy_size_per_origin_num;//Contains size of the canopy created from origin by it's number, so first origin gave canopy of size 5, second origin gave canopy of size 8 and so on
-    int num_of_consecutive_canopies_of_size_1 = 0;
     int last_progress_displayed_at_num_points = 0;
 
     std::vector<Canopy*> canopy_vector;
@@ -154,15 +152,11 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
     int first_non_processed_origin_due_interruption = points.size();
 
-#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps, canopy_size_per_origin_num, num_of_consecutive_canopies_of_size_1, num_collisions, canopy_stats_row_num, terminate_called, first_non_processed_origin_due_interruption) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, last_progress_displayed_at_num_points) schedule(dynamic)
+#pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps, canopy_size_per_origin_num, num_collisions, canopy_stats_row_num, terminate_called, first_non_processed_origin_due_interruption) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, last_progress_displayed_at_num_points) schedule(dynamic)
     for(int origin_i = 0; origin_i < points.size(); origin_i++){
 
         //Early stopping proportion of points
         if(marked_points.size() > stop_proportion_of_points * points.size()){
-            continue;
-        }
-
-        if(num_of_consecutive_canopies_of_size_1 == stop_num_single_point_clusters){
             continue;
         }
 
@@ -269,16 +263,6 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
                 BOOST_FOREACH(Point* n, final_canopy->neighbours){
                     marked_points.insert(n);
-                }
-
-                //Early stopping by number of number of consecutive canopies of size 1
-                if(final_canopy->neighbours.size() == 1)
-                    num_of_consecutive_canopies_of_size_1++;
-                else
-                    num_of_consecutive_canopies_of_size_1 = 0;
-
-                if(num_of_consecutive_canopies_of_size_1 >= stop_num_single_point_clusters){
-                    _log(logINFO) << "Reached " << num_of_consecutive_canopies_of_size_1  << " of consecutive canopies of size 1. Stopping.";
                 }
 
                 //Statistics showing size of canopies per analyzed origin
