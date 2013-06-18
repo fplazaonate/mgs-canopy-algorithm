@@ -363,6 +363,9 @@ int main(int argc, char* argv[])
     }
     out_file.close();
 
+    //
+    //Clean up
+    //
     BOOST_FOREACH(Canopy* c, canopies)
         delete c;
 
