@@ -259,40 +259,66 @@ int main(int argc, char* argv[])
     verify_proper_point_input_or_die(points);
     time_profile.stop_timer("Point validation");
 
+    int num_points_filtered_out_due_to_three_point_proportion_filter = 0;
+    int num_points_filtered_out_due_to_num_non_zero_samples_filter= 0;
+
 
     time_profile.start_timer("Input point filtering");
 
 #pragma omp parallel for 
     for(int i = 0; i < points.size(); i++){
         if((min_non_zero_data_samples > 0) && (max_top_three_data_point_proportion < 0.9999)){
-            if( 
-                    points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples)  &&
-                    points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion) 
-              )
+            if(points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples))
             {
 #pragma omp critical
                 filtered_points.push_back(points[i]);
             }
+            else 
+            {
+#pragma omp critical
+                num_points_filtered_out_due_to_num_non_zero_samples_filter++;
+            }
+
+            if(points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion))
+            {
+#pragma omp critical
+                filtered_points.push_back(points[i]);
+            }
+            else 
+            {
+#pragma omp critical
+                num_points_filtered_out_due_to_three_point_proportion_filter++;
+            }
+
         } else if (min_non_zero_data_samples > 0){ 
             if(points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples)){
 #pragma omp critical
                 filtered_points.push_back(points[i]);
             }
+            else
+            {
+                num_points_filtered_out_due_to_num_non_zero_samples_filter++;
+            }
         } else if (max_top_three_data_point_proportion < 0.9999){ 
             if(points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion)){ 
 #pragma omp critical
                 filtered_points.push_back(points[i]);
+            } else {
+                num_points_filtered_out_due_to_three_point_proportion_filter++;
             }
         }
     }
 
     time_profile.stop_timer("Input point filtering");
+    _log(logINFO) << "Number of points filtered out due to three point sample values proportion filter: " << num_points_filtered_out_due_to_three_point_proportion_filter;
+    _log(logINFO) << "Number of points filtered out due to non zero samples number filter: " << num_points_filtered_out_due_to_num_non_zero_samples_filter;
 
     _log(logINFO) << "Finished input points processing";
     
     _log(logINFO) << "Number of points after filtering: " << filtered_points.size();
     
     die_if_true(terminate_called);
+    die_if_true(filtered_points.size() < 1);
     //
     //Run Canopy Clustering
     //
