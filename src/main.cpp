@@ -270,6 +270,16 @@ int main(int argc, char* argv[])
         if((min_non_zero_data_samples > 0) && (max_top_three_data_point_proportion < 0.9999)){
             if(points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples))
             {
+                if(points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion))
+                {
+#pragma omp critical
+                    filtered_points.push_back(points[i]);
+                }
+                else 
+                {
+#pragma omp critical
+                    num_points_filtered_out_due_to_three_point_proportion_filter++;
+                }
 #pragma omp critical
                 filtered_points.push_back(points[i]);
             }
@@ -279,16 +289,6 @@ int main(int argc, char* argv[])
                 num_points_filtered_out_due_to_num_non_zero_samples_filter++;
             }
 
-            if(points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion))
-            {
-#pragma omp critical
-                filtered_points.push_back(points[i]);
-            }
-            else 
-            {
-#pragma omp critical
-                num_points_filtered_out_due_to_three_point_proportion_filter++;
-            }
 
         } else if (min_non_zero_data_samples > 0){ 
             if(points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples)){
