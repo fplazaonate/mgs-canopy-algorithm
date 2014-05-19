@@ -280,8 +280,6 @@ int main(int argc, char* argv[])
 #pragma omp critical
                     num_points_filtered_out_due_to_three_point_proportion_filter++;
                 }
-#pragma omp critical
-                filtered_points.push_back(points[i]);
             }
             else 
             {
