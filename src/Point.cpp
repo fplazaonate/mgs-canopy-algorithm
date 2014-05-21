@@ -99,10 +99,10 @@ bool Point::check_if_top_three_point_proportion_is_smaller_than(double x){
     std::sort(temp_data_samples.begin(), temp_data_samples.end());
     std::reverse(temp_data_samples.begin(), temp_data_samples.end());
 
-    double sum_data_samples = std::accumulate(sample_data, sample_data + num_data_samples, 0 );
+    double sum_data_samples = std::accumulate(sample_data, sample_data + num_data_samples, 0.0 );
     double sum_top_three = temp_data_samples[0] + temp_data_samples[1] + temp_data_samples[2]; 
 
-    return (sum_top_three / sum_data_samples) < x;
+    return (sum_top_three / sum_data_samples) < x - 0.0000000001;
 
 }
 
@@ -131,8 +131,6 @@ void verify_proper_point_input_or_die(const std::vector<Point*>& points){
     _log(logINFO) << "Finished reading point input file";
     _log(logINFO) << "Observed number of samples per point: " << num_samples;
     _log(logINFO) << "Number of points read: " << points.size();
-        
-    //TODO check if samples vary
 
 }
 
