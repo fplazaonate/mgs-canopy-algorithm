@@ -172,7 +172,7 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
 
         BOOST_FOREACH(const Point* p, points){
 
-            //TODO: this is slow as hell
+            //TODO: this is slow 
             point_samples.push_back(p->sample_data[i]);
 
         }
