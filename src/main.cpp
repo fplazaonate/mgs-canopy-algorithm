@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
         while(*line_end_ptr != '\n' && *line_end_ptr != '\r' && line_end_ptr < mmap_end_ptr){
             line_end_ptr++;
         }
-        if(line_end_ptr != line_start_ptr && line_start_ptr != point_file_mmap){//Check if the line is not empty
+        if(line_end_ptr != line_start_ptr){//Check if the line is not empty
             *line_end_ptr = '\0';
             //cout << line_start_ptr << endl;
             points.push_back(new Point(line_start_ptr));
