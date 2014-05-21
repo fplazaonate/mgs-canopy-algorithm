@@ -15,7 +15,6 @@ using namespace std;
 
 class CanopyClusteringAlg{
     public:
-        static std::vector<Canopy*> single_core_run_clustering_on(vector<Point*>& points);
         /**
          * Run the canopy clustering algorithm
          *
