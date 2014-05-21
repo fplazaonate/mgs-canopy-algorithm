@@ -1,5 +1,4 @@
 *.o
-Makefile
 .clang_complete
 data
 old
