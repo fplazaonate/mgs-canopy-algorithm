@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     algorithm_param_options_desc.add_options()
         ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1), "Max pearson correlation difference between a canopy center and a point included to the canopy")
         ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4), "Max pearson correlation difference between a canopy center and a point in which the point will be considered close to the canopy. As a heuristc, only points within this distance will be considered as potential neighbours during the canopy walk.")
-        ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.05), "Max pearson correlation difference between two canopy centers in which the canopies should be merged.")
+        ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.05), "Max pearson correlation difference between two canopy centers in which the canopies should be merged. Please note, that the final canopy profiles are calculated after the merge step and consequently some final canopies might have profiles that are closer then max_merge_dist specifies.")
         ("min_step_dist", value<double>(&min_step_dist)->default_value(0.01), "Min pearson correlation difference between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy (canopy walk). This is a stop criterion for canopy walk.")
         ("max_num_canopy_walks", value<int>(&max_num_canopy_walks)->default_value(3), "Max number of times the canopy will walk. This is a stop criterion for canopy walk.");
 
