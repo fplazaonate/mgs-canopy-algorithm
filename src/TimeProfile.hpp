@@ -18,45 +18,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef TIME_PROFILE
+#define TIME_PROFILE
 
+#include <time.h>
+#include <cmath>
+#include <string>
 
-#include <boost/foreach.hpp>
+#include <boost/unordered_map.hpp>
 
-#include <Canopy.hpp>
+using namespace std;
+using namespace boost;
 
-Canopy::Canopy(std::vector<Point*> neighbours): neighbours(neighbours){
-    find_and_set_center();
-}
+typedef boost::unordered_map<string, pair<bool, time_t> > TimerType;
 
-Canopy::~Canopy(){
-    delete center;
-}
+class TimeProfile {
+    private:
+        TimerType timers;
+    public:
+        void start_timer(string timer_name);
+        void restart_timer(string timer_name);
+        void stop_timer(string timer_name);
 
-void Canopy::find_and_set_center(){
+        friend ostream& operator<<(ostream& ost, const TimeProfile& c);
+};
 
-    center = get_centroid_of_points(neighbours);
-
-}
-
-std::ostream& operator<<(std::ostream& ost, const Canopy& c)
-{
-    ost << ">>>>>>>>>>Canopy>>>>>>>>" << std::endl;
-    ost << "Center:" << std::endl;
-    if(c.center != NULL)
-        ost << *c.center;
-    else
-        ost << "===NONE===" << endl;
-    ost << "Neighbours:" << std::endl;
-    BOOST_FOREACH(const Point* p, c.neighbours)
-        ost << p->id << "\t";
-    ost << std::endl;
-    ost << ">>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-
-
-}
-
-bool compare_canopy_ptrs_by_canopy_size(const Canopy* a, const Canopy* b){
-    return (a->neighbours.size() > b->neighbours.size());
-}
-
-
+#endif

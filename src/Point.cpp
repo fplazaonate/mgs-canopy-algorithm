@@ -1,11 +1,33 @@
-
+/**
+ * Metagenomics Canopy Clustering Implementation
+ *
+ * Copyright (C) 2013, 2014 Piotr Dworzynski (piotr@cbs.dtu.dk), Technical University of Denmark
+ *
+ * This file is part of Metagenomics Canopy Clustering Implementation.
+ *
+ * Metagenomics Canopy Clustering Implementation is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Metagenomics Canopy Clustering Implementation is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <functional>
+#include <numeric>
 
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/algorithm/string.hpp>
@@ -74,17 +96,34 @@ Point::~Point(){
     delete sample_data_pearson_precomputed;
 }
 
-bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
 
-    int num_non_zero_medians = 0;
+bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
+    int num_non_zero_samples = 0;
     for(int i=0; i < num_data_samples; i++){
         if(sample_data[i] > 0.0000001){
-            num_non_zero_medians++;
-            if(num_non_zero_medians >= x)
+            num_non_zero_samples++;
+            if(num_non_zero_samples >= x)
                 return true;
         }
     }
     return false;
+
+}
+
+bool Point::check_if_top_three_point_proportion_is_smaller_than(double x){
+
+    vector<double> temp_data_samples;
+    temp_data_samples.reserve(num_data_samples);
+    std::copy(sample_data, sample_data + num_data_samples, temp_data_samples.begin());
+
+    std::sort(temp_data_samples.begin(), temp_data_samples.end());
+    std::reverse(temp_data_samples.begin(), temp_data_samples.end());
+
+    double sum_data_samples = std::accumulate(sample_data, sample_data + num_data_samples, 0.0 );
+    double sum_top_three = temp_data_samples[0] + temp_data_samples[1] + temp_data_samples[2]; 
+
+    return (sum_top_three / sum_data_samples) < x - 0.0000000001;
+
 }
 
 bool Point::check_if_single_point_proportion_is_smaller_than(double x){
@@ -106,15 +145,12 @@ void verify_proper_point_input_or_die(const std::vector<Point*>& points){
     //Verify all points have the same number of samples
     int num_samples = points[0]->num_data_samples;
     BOOST_FOREACH(const Point* point, points){
-        _log(logDEBUG) <<  *point;
         assert(point->num_data_samples == num_samples);
     }
 
     _log(logINFO) << "Finished reading point input file";
     _log(logINFO) << "Observed number of samples per point: " << num_samples;
     _log(logINFO) << "Number of points read: " << points.size();
-        
-    //TODO check if samples vary
 
 }
 
@@ -141,17 +177,14 @@ double get_distance_between_points(const Point* p1, const Point* p2){
 
 Point* get_centroid_of_points(const std::vector<Point*>& points){
 
-    //TODO: median should be estimated using boost/accumulators/statistics/median.hpp
-
-    Point* centroid = new Point(*points[0]);
-    //TODO: Could be done better
+    Point* centroid = new Point(*(points[0]));
     centroid->id = "!GENERATED!";
     
     assert(points.size());
 
     int num_samples = points[0]->num_data_samples;
 
-    _log(logDEBUG4) << "num samples: " << num_samples;
+    //_log(logDEBUG4) << "num samples: " << num_samples;
 
     for(int i = 0; i < num_samples; i++){
 
@@ -159,7 +192,7 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
 
         BOOST_FOREACH(const Point* p, points){
 
-            //TODO: this is slow as hell
+            //TODO: this is slow 
             point_samples.push_back(p->sample_data[i]);
 
         }
@@ -185,52 +218,10 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
     return centroid;
 }
 
-void filter_out_input_points(std::vector<Point*>& points){
-
-    //TODO: make a parameter
-    int min_non_zero_data_samples = 3;
-
-    int num_points = points.size();
-    int num_data_samples = points[0]->num_data_samples;
-
-    vector<int> indexes_to_drop;
-
-    for(int i = 0; i < num_points; i++){
-        int num_non_zero_samples = 0;
-        for(int j = 0; j < num_data_samples; j++){
-            if( points[i]->sample_data[j] > 0.0000001 ){
-                num_non_zero_samples++;
-                if(num_non_zero_samples >= min_non_zero_data_samples)
-                    break;
-            }
-        }
-        if(num_non_zero_samples < min_non_zero_data_samples)
-            indexes_to_drop.push_back(i);
-    }
-
-    std::sort(indexes_to_drop.begin(), indexes_to_drop.end());
-    std::reverse(indexes_to_drop.begin(), indexes_to_drop.end());
-
-    for(int i = 0; i < indexes_to_drop.size(); i++){
-        delete points[indexes_to_drop[i]];
-        points.erase(points.begin() + indexes_to_drop[i]);
-    }
-
-
-
-}
 
 std::size_t hash_value(const Point& p){
     boost::hash<std::string> hasher;
     return hasher(p.id);
-}
-
-bool Point::operator==(const Point& other) const {
-    if(id == other.id){
-        return true;
-    } else {
-        return false;
-    }
 }
 
 std::ostream& operator<<(std::ostream& ost, const Point& p)

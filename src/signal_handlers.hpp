@@ -18,45 +18,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef SIGNAL_HANDLERS
+#define SIGNAL_HANDLERS
 
+#include <signal.h>
+#include <Log.hpp>
 
-#include <boost/foreach.hpp>
+extern int terminate_called;
 
-#include <Canopy.hpp>
+void signal_callback_gentle_handler(int signum);
+void signal_callback_die_handler(int signum);
 
-Canopy::Canopy(std::vector<Point*> neighbours): neighbours(neighbours){
-    find_and_set_center();
-}
+void die_if_true(int terminate_called);
 
-Canopy::~Canopy(){
-    delete center;
-}
-
-void Canopy::find_and_set_center(){
-
-    center = get_centroid_of_points(neighbours);
-
-}
-
-std::ostream& operator<<(std::ostream& ost, const Canopy& c)
-{
-    ost << ">>>>>>>>>>Canopy>>>>>>>>" << std::endl;
-    ost << "Center:" << std::endl;
-    if(c.center != NULL)
-        ost << *c.center;
-    else
-        ost << "===NONE===" << endl;
-    ost << "Neighbours:" << std::endl;
-    BOOST_FOREACH(const Point* p, c.neighbours)
-        ost << p->id << "\t";
-    ost << std::endl;
-    ost << ">>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-
-
-}
-
-bool compare_canopy_ptrs_by_canopy_size(const Canopy* a, const Canopy* b){
-    return (a->neighbours.size() > b->neighbours.size());
-}
-
-
+#endif
