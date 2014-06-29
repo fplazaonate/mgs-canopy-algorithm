@@ -79,8 +79,11 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
 
     }
 
-    return new Canopy(neighbours);
+    if( ! neighbours.size()){
+        neighbours.push_back(origin);
+    }
 
+    return new Canopy(neighbours);
 }
 
 Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_canopy_dist, double max_close_dist, double min_step_dist, double max_num_canopy_walks, int& num_canopy_jumps){
@@ -88,10 +91,10 @@ Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, 
     Canopy *c1;
     Canopy *c2;
 
+
     c1 = create_canopy(origin, points, close_points, max_canopy_dist, max_close_dist, true);
-
     c2 = create_canopy(c1->center, points, close_points, max_canopy_dist, max_close_dist, false);
-
+    
     double dist = get_distance_between_points(c1->center, c2->center);
 
     {
@@ -131,7 +134,6 @@ Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, 
     }
 
     //Now we know that c1 and c2 are close enough and we should choose the one that has more neighbours
-
     Canopy* final_canopy; 
     if(c1->neighbours.size() > c2->neighbours.size()){
         final_canopy = c1;

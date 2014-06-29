@@ -67,6 +67,8 @@ int main(int argc, char* argv[])
 
     //Prepare variables for command line input
     string point_input_file;
+    string points_filtered_out_top_three_prop_file_path;
+    string points_filtered_out_at_least_non_zero_file_path;
     string output_file;
     string output_centers_file;
     string output_cluster_prefix;
@@ -116,7 +118,9 @@ int main(int argc, char* argv[])
 
     filter_in_options_desc.add_options()
         ("filter_min_obs", value<int>(&min_non_zero_data_samples)->default_value(3), "Discard those points which have fewer than N non-zero data points (observations). Setting it to 0 will disable the filter.")
-        ("filter_max_dominant_obs", value<double>(&max_top_three_data_point_proportion)->default_value(0.9), "Discard those points for which top 3 data points constitute more than X fraction of the total signal. Setting it to 1 will disable the filter");
+        ("filter_max_dominant_obs", value<double>(&max_top_three_data_point_proportion)->default_value(0.9), "Discard those points for which top 3 data points constitute more than X fraction of the total signal. Setting it to 1 will disable the filter")
+        ("filtered_out_points_min_obs_file", value<string>(&points_filtered_out_at_least_non_zero_file_path)->default_value(""), "File to which write out those files that didn't match the filter_min_obs filter")
+        ("filtered_out_points_max_dominant_obs_file", value<string>(&points_filtered_out_top_three_prop_file_path)->default_value(""), "File to which write out those files that didn't match the filter_max_dominant_obs filter.");
 
     filter_out_options_desc.add_options()
         ("filter_zero_medians", value<int>(&min_num_non_zero_medians)->default_value(3), "Return only those canopies that have at least N non-zero cluster profile observations. Setting it to 0 will disable the filter.")
@@ -157,6 +161,8 @@ int main(int argc, char* argv[])
     check_if_file_is_readable("point_input_file",point_input_file);
     check_if_file_is_writable("output_file",output_file);
     check_if_file_is_writable("output_centers_file",output_centers_file);
+    check_if_file_is_writable("points_filtered_out_top_three_prop_file_path",points_filtered_out_top_three_prop_file_path);
+    check_if_file_is_writable("points_filtered_out_at_least_non_zero_file_path",points_filtered_out_at_least_non_zero_file_path);
     vector<string> valid_verbosities;
     valid_verbosities += "error", "progress", "warn", "info", "debug", "debug1", "debug2";
     check_if_one_of("verbosity_option",verbosity_option, valid_verbosities);
@@ -279,57 +285,79 @@ int main(int argc, char* argv[])
     verify_proper_point_input_or_die(points);
     time_profile.stop_timer("Point validation");
 
-    int num_points_filtered_out_due_to_three_point_proportion_filter = 0;
-    int num_points_filtered_out_due_to_num_non_zero_samples_filter= 0;
-
+    vector<Point*> points_filtered_out_due_to_three_point_proportion_filter;
+    vector<Point*> points_filtered_out_due_to_num_non_zero_samples_filter;
 
     time_profile.start_timer("Input point filtering");
 
-#pragma omp parallel for 
+#pragma omp parallel for shared(points_filtered_out_due_to_three_point_proportion_filter, points_filtered_out_due_to_num_non_zero_samples_filter, filtered_points)
     for(int i = 0; i < points.size(); i++){
+        //Both filters are set
         if((min_non_zero_data_samples > 0) && (max_top_three_data_point_proportion < 0.9999)){
-            if(points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples))
-            {
-                if(points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion))
-                {
-#pragma omp critical
-                    filtered_points.push_back(points[i]);
-                }
-                else 
-                {
-#pragma omp critical
-                    num_points_filtered_out_due_to_three_point_proportion_filter++;
-                }
-            }
-            else 
+            bool point_is_valid = true;
+                
+            if( ! points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples))
             {
 #pragma omp critical
-                num_points_filtered_out_due_to_num_non_zero_samples_filter++;
+                points_filtered_out_due_to_num_non_zero_samples_filter.push_back(points[i]);
+                point_is_valid = false;
             }
 
+            if( ! points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion))
+            {
+#pragma omp critical
+                points_filtered_out_due_to_three_point_proportion_filter.push_back(points[i]);
+                point_is_valid = false;
+            }
 
+            if(point_is_valid){
+#pragma omp critical
+                filtered_points.push_back(points[i]);
+            }
         } else if (min_non_zero_data_samples > 0){ 
             if(points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples)){
 #pragma omp critical
                 filtered_points.push_back(points[i]);
             }
-            else
+            else 
             {
-                num_points_filtered_out_due_to_num_non_zero_samples_filter++;
+#pragma omp critical
+                points_filtered_out_due_to_num_non_zero_samples_filter.push_back(points[i]);
             }
         } else if (max_top_three_data_point_proportion < 0.9999){ 
             if(points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion)){ 
 #pragma omp critical
                 filtered_points.push_back(points[i]);
-            } else {
-                num_points_filtered_out_due_to_three_point_proportion_filter++;
+            }
+            else 
+            {
+#pragma omp critical
+                points_filtered_out_due_to_three_point_proportion_filter.push_back(points[i]);
             }
         }
     }
+    if(points_filtered_out_at_least_non_zero_file_path != ""){
+        ofstream filtered_point_file;
+        filtered_point_file.open(points_filtered_out_at_least_non_zero_file_path.c_str(), ios::out | ios::trunc);
+        for(int i = 0; i < points_filtered_out_due_to_num_non_zero_samples_filter.size(); i++){
+            filtered_point_file << points[i]->id << "\n";
+        }
+        filtered_point_file.close();
+    }
+
+    if(points_filtered_out_top_three_prop_file_path != ""){
+        ofstream filtered_point_file;
+        filtered_point_file.open(points_filtered_out_top_three_prop_file_path.c_str(), ios::out | ios::trunc);
+        for(int i = 0; i < points_filtered_out_due_to_three_point_proportion_filter.size(); i++){
+            filtered_point_file << points[i]->id << "\n";
+        }
+        filtered_point_file.close();
+    }
 
     time_profile.stop_timer("Input point filtering");
-    _log(logINFO) << "Number of points filtered out due to three point sample values proportion filter: " << num_points_filtered_out_due_to_three_point_proportion_filter;
-    _log(logINFO) << "Number of points filtered out due to non zero samples number filter: " << num_points_filtered_out_due_to_num_non_zero_samples_filter;
+    _log(logINFO) << "Number of points filtered out due to three point sample values proportion filter: " << points_filtered_out_due_to_three_point_proportion_filter.size();
+    _log(logINFO) << "Number of points filtered out due to non zero samples number filter: " << points_filtered_out_due_to_num_non_zero_samples_filter.size();
+    _log(logINFO) << "Number of points filtered out: " << points.size() - filtered_points.size(); 
 
     _log(logINFO) << "Finished input points processing";
     
