@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
     check_if_file_is_writable("points_filtered_out_top_three_prop_file_path",points_filtered_out_top_three_prop_file_path);
     check_if_file_is_writable("points_filtered_out_at_least_non_zero_file_path",points_filtered_out_at_least_non_zero_file_path);
     vector<string> valid_verbosities;
-    valid_verbosities += "error", "progress", "warn", "info", "debug", "debug1", "debug2";
+    valid_verbosities += "error", "progress", "warn", "info", "debug", "debug1", "debug2", "debug3";
     check_if_one_of("verbosity_option",verbosity_option, valid_verbosities);
     check_if_within_bounds("num_threads",num_threads,1,999);//Not exactly future proof, but let's put foolproofness first
     check_if_within_bounds("max_canopy_dist",max_canopy_dist,0.0,1.0);
@@ -198,6 +198,10 @@ int main(int argc, char* argv[])
         log_level = logDEBUG;
     }else if(verbosity_option == "debug1"){
         log_level = logDEBUG1;
+    }else if(verbosity_option == "debug2"){
+        log_level = logDEBUG2;
+    }else if(verbosity_option == "debug3"){
+        log_level = logDEBUG3;
     }
 
     _log(logINFO) << "";

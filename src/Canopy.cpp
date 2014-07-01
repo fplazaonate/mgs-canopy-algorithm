@@ -51,10 +51,10 @@ std::ostream& operator<<(std::ostream& ost, const Canopy& c)
         ost << *c.center;
     else
         ost << "===NONE===" << endl;
-    ost << "Neighbours:" << std::endl;
-    BOOST_FOREACH(const Point* p, c.neighbours)
-        ost << p->id << "\t";
-    ost << std::endl;
+    ost << "Neighbours: " << c.neighbours.size() << std::endl;
+    //BOOST_FOREACH(const Point* p, c.neighbours)
+    //    ost << p->id << "\t";
+    //ost << std::endl;
     ost << ">>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
 
 

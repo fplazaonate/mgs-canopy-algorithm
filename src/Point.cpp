@@ -42,12 +42,12 @@ Point::Point(const char* line){
     //Copy line to private buffer - strtok will modify it
     char* private_line = new char[strlen(line) + 1];
     strcpy(private_line,line);
-    _log(logDEBUG2)<< "Point constructor, got: \"" << line << "\""; 
+    _log(logDEBUG3)<< "Point constructor, got: \"" << line << "\""; 
 
     //Read gene id - first word in the line
     char* word = strtok(private_line, "\t ");
     id = string(word);
-    _log(logDEBUG2)<< "Point constructor, point id: \"" << id << "\""; 
+    _log(logDEBUG3)<< "Point constructor, point id: \"" << id << "\""; 
 
     //Fill vector with data samples
     std::vector<double> sample_data_vector;
@@ -61,7 +61,7 @@ Point::Point(const char* line){
 
     //Get number of samples for this point
     num_data_samples = sample_data_vector.size();
-    _log(logDEBUG2)<< "Point constructor, num data samples: \"" << num_data_samples << "\""; 
+    _log(logDEBUG3)<< "Point constructor, num data samples: \"" << num_data_samples << "\""; 
 
     //Allocate and copy samples into array
     sample_data = new double[num_data_samples];

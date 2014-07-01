@@ -101,20 +101,11 @@ Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, 
         _log(logDEBUG2) << "Canopy walking, first step";
         _log(logDEBUG2) << *c1;
         _log(logDEBUG2) << *c2;
-        _log(logDEBUG2) << "dist: " << dist;
+        _log(logDEBUG2) << "First potential jump correlation dist: " << dist;
     }
-
-    {
-        _log(logDEBUG3) << "Point1:" ;
-        _log(logDEBUG3) << *c1 ;
-        _log(logDEBUG3) << "Point2:" ;
-        _log(logDEBUG3) << *c2 ;
-        _log(logDEBUG3) << "First potential jump correlation: " << dist;
-    }
-    
 
     int num_canopy_jumps_local = 0;
-    while((dist > min_step_dist) && (max_num_canopy_walks <= num_canopy_jumps_local)){
+    while((dist > min_step_dist) && (num_canopy_jumps_local <= max_num_canopy_walks )){
         delete c1;
         c1=c2;
 
