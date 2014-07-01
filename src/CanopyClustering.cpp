@@ -79,11 +79,11 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
 
     }
 
-    if( ! neighbours.size()){
-        neighbours.push_back(origin);
+    if(neighbours.size()){
+        return new Canopy(neighbours);
+    } else {
+        return new Canopy(origin);
     }
-
-    return new Canopy(neighbours);
 }
 
 Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_canopy_dist, double max_close_dist, double min_step_dist, double max_num_canopy_walks, int& num_canopy_jumps){
@@ -358,7 +358,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
 
     _log(logINFO) << "";
-    _log(logINFO) << "Avg. number of canopy jumps: " << num_canopy_jumps/(double)canopy_vector.size();
+    _log(logINFO) << "Avg. number of canopy walks: " << num_canopy_jumps/((double)canopy_vector.size());
     _log(logINFO) << "Number of canopies before merging: " << canopy_vector.size();
 
     int original_number_of_canopies = canopy_vector.size();

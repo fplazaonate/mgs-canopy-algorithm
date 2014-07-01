@@ -24,6 +24,11 @@
 
 #include <Canopy.hpp>
 
+Canopy::Canopy(Point* center_to_copy){
+    center = new Point(*center_to_copy);
+    center->id = "!GENERATED!";
+}
+
 Canopy::Canopy(std::vector<Point*> neighbours): neighbours(neighbours){
     find_and_set_center();
 }
