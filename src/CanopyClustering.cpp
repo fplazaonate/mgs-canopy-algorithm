@@ -79,8 +79,11 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
 
     }
 
-    return new Canopy(neighbours);
-
+    if(neighbours.size()){
+        return new Canopy(neighbours);
+    } else {
+        return new Canopy(origin);
+    }
 }
 
 Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_canopy_dist, double max_close_dist, double min_step_dist, double max_num_canopy_walks, int& num_canopy_jumps){
@@ -88,30 +91,21 @@ Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, 
     Canopy *c1;
     Canopy *c2;
 
+
     c1 = create_canopy(origin, points, close_points, max_canopy_dist, max_close_dist, true);
-
     c2 = create_canopy(c1->center, points, close_points, max_canopy_dist, max_close_dist, false);
-
+    
     double dist = get_distance_between_points(c1->center, c2->center);
 
     {
         _log(logDEBUG2) << "Canopy walking, first step";
         _log(logDEBUG2) << *c1;
         _log(logDEBUG2) << *c2;
-        _log(logDEBUG2) << "dist: " << dist;
+        _log(logDEBUG2) << "First potential jump correlation dist: " << dist;
     }
-
-    {
-        _log(logDEBUG3) << "Point1:" ;
-        _log(logDEBUG3) << *c1 ;
-        _log(logDEBUG3) << "Point2:" ;
-        _log(logDEBUG3) << *c2 ;
-        _log(logDEBUG3) << "First potential jump correlation: " << dist;
-    }
-    
 
     int num_canopy_jumps_local = 0;
-    while((dist > min_step_dist) && (max_num_canopy_walks <= num_canopy_jumps_local)){
+    while((dist > min_step_dist) && (num_canopy_jumps_local <= max_num_canopy_walks )){
         delete c1;
         c1=c2;
 
@@ -131,7 +125,6 @@ Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, 
     }
 
     //Now we know that c1 and c2 are close enough and we should choose the one that has more neighbours
-
     Canopy* final_canopy; 
     if(c1->neighbours.size() > c2->neighbours.size()){
         final_canopy = c1;
@@ -356,7 +349,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
 
     _log(logINFO) << "";
-    _log(logINFO) << "Avg. number of canopy jumps: " << num_canopy_jumps/(double)canopy_vector.size();
+    _log(logINFO) << "Avg. number of canopy walks: " << num_canopy_jumps/((double)canopy_vector.size());
     _log(logINFO) << "Number of canopies before merging: " << canopy_vector.size();
 
     int original_number_of_canopies = canopy_vector.size();

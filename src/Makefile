@@ -36,7 +36,7 @@ COMP = $(GNU_COMP)
 COMP_OPENMP = $(GNU_OPENMP)
 endif
 
-#ADDITIONAL_OPTS = -p -g 
+#ADDITIONAL_OPTS = -p -g
 ADDITIONAL_OPTS = -O3 -msse4.2 
 
 INCLUDES = -I./ -I/tools/boost/include/ #Add path to local boost here if needed

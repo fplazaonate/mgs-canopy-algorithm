@@ -42,12 +42,12 @@ Point::Point(const char* line){
     //Copy line to private buffer - strtok will modify it
     char* private_line = new char[strlen(line) + 1];
     strcpy(private_line,line);
-    _log(logDEBUG2)<< "Point constructor, got: \"" << line << "\""; 
+    _log(logDEBUG3)<< "Point constructor, got: \"" << line << "\""; 
 
     //Read gene id - first word in the line
     char* word = strtok(private_line, "\t ");
     id = string(word);
-    _log(logDEBUG2)<< "Point constructor, point id: \"" << id << "\""; 
+    _log(logDEBUG3)<< "Point constructor, point id: \"" << id << "\""; 
 
     //Fill vector with data samples
     std::vector<double> sample_data_vector;
@@ -61,7 +61,7 @@ Point::Point(const char* line){
 
     //Get number of samples for this point
     num_data_samples = sample_data_vector.size();
-    _log(logDEBUG2)<< "Point constructor, num data samples: \"" << num_data_samples << "\""; 
+    _log(logDEBUG3)<< "Point constructor, num data samples: \"" << num_data_samples << "\""; 
 
     //Allocate and copy samples into array
     sample_data = new double[num_data_samples];
@@ -113,16 +113,21 @@ bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
 bool Point::check_if_top_three_point_proportion_is_smaller_than(double x){
 
     vector<double> temp_data_samples;
-    temp_data_samples.reserve(num_data_samples);
+    temp_data_samples.resize(num_data_samples, 0.0);
     std::copy(sample_data, sample_data + num_data_samples, temp_data_samples.begin());
 
     std::sort(temp_data_samples.begin(), temp_data_samples.end());
     std::reverse(temp_data_samples.begin(), temp_data_samples.end());
 
-    double sum_data_samples = std::accumulate(sample_data, sample_data + num_data_samples, 0.0 );
+    double sum_data_samples = std::accumulate(temp_data_samples.begin(), temp_data_samples.end(), 0.0 );
     double sum_top_three = temp_data_samples[0] + temp_data_samples[1] + temp_data_samples[2]; 
 
-    return (sum_top_three / sum_data_samples) < x - 0.0000000001;
+    if(sum_data_samples > 0.000000001){
+        return (sum_top_three / sum_data_samples) < x - 0.0000000001;
+    } else {
+        //All samples have 0 value - can't divide by 0
+        return false;
+    }
 
 }
 
@@ -177,10 +182,10 @@ double get_distance_between_points(const Point* p1, const Point* p2){
 
 Point* get_centroid_of_points(const std::vector<Point*>& points){
 
+    assert(points.size());
+
     Point* centroid = new Point(*(points[0]));
     centroid->id = "!GENERATED!";
-    
-    assert(points.size());
 
     int num_samples = points[0]->num_data_samples;
 
