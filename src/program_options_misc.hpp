@@ -45,12 +45,13 @@ bool check_if_within_bounds(string option_name, int value, int lower, int higher
 }
 
 bool check_if_file_is_readable(string option_name, string path){
-    ofstream file;
-    try{
-        file.open(path.c_str(), ios::in );
-        file.close();
-        return true;
-    } catch (ios_base::failure){
+    ifstream file;
+	file.open(path.c_str(), ios::in);
+	
+	if (file.good()) {
+		file.close();
+		return true;
+	} else {
         _log(logERR) << "Option: \"" << option_name << "\" must be accessible and readable.";
         exit(1);
     }
@@ -58,11 +59,12 @@ bool check_if_file_is_readable(string option_name, string path){
 
 bool check_if_file_is_writable(string option_name, string path){
     ofstream file;
-    try{
-        file.open(path.c_str(), ios::out | ios::trunc);
-        file.close();
-        return true;
-    } catch (ios_base::failure){
+    file.open(path.c_str(), ios::out | ios::trunc);
+
+    if (file.good()) {
+		file.close();
+		return true;
+	} else {
         _log(logERR) << "Option: \"" << option_name << "\" must be accessible and writable.";
         exit(1);
     }
