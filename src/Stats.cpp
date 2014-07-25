@@ -43,12 +43,16 @@ void precompute_pearson_data(int sample_data_length, const double* __restrict__ 
     stddev = sqrt(factor_sum/sample_data_length);
 
     //Precompute pearson data
-    for(int i = 0; i < sample_data_length; i++){
-        if(fabs(stddev) < 2* std::numeric_limits<double>::min())
-            precomputed_pearson_data[i] = 0;
-        else
-            precomputed_pearson_data[i] = (sample_data[i] - avg)/(stddev * sample_data_length);
-    }
+	if(fabs(stddev) < 2* std::numeric_limits<double>::min())
+	{
+		for(size_t i = 0; i < sample_data_length; i++){
+			precomputed_pearson_data[i] = 0;
+		}
+	} else {
+		for(size_t i = 0; i < sample_data_length; i++){
+			precomputed_pearson_data[i] = (sample_data[i] - avg)/(stddev * sample_data_length);
+		}
+	}
 }
 
 double pearsoncorr_from_precomputed(int n, const double* __restrict__  v1, const double* __restrict__  v2){
