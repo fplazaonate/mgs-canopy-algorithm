@@ -31,9 +31,6 @@
 
 #include <boost/program_options.hpp>
 
-#include <boost/iostreams/stream.hpp>
-#include <boost/iostreams/device/mapped_file.hpp>
-
 #include <boost/foreach.hpp>
 #include <boost/assign/std/vector.hpp> 
 
