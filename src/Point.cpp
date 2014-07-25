@@ -113,6 +113,7 @@ bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
 bool Point::check_if_top_three_point_proportion_is_smaller_than(double x){
 
     vector<double> temp_data_samples(num_data_samples);
+	std::copy(sample_data, sample_data + num_data_samples, temp_data_samples.begin());
 
     std::sort(temp_data_samples.begin(), temp_data_samples.end(), std::greater<double>());
 
