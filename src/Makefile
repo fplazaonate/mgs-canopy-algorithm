@@ -36,12 +36,13 @@ COMP = $(GNU_COMP)
 COMP_OPENMP = $(GNU_OPENMP)
 endif
 
-#ADDITIONAL_OPTS = -p -g
-ADDITIONAL_OPTS = -O3 -msse4.2 
+CFLAGS = -O3 -march=native
+BOOST_INCDIR=
+INCLUDES = -I./ $(BOOST_INCDIR)
 
-INCLUDES = -I./ -I/tools/boost/include/ #Add path to local boost here if needed
-
-LIBS =  -L./ -L/tools/boost/lib/ -Wl,-Bstatic -lboost_program_options  -Wl,-Bdynamic
+LDFLAGS = 
+BOOST_LIBDIR=
+LIBS =  $(BOOST_LIBDIR) -lboost_program_options
 
 ADDITIONAL_FILES_TO_BE_DELETED = 
 
@@ -49,34 +50,16 @@ ADDITIONAL_FILES_TO_BE_DELETED =
 ##	OBJECTS
 ############################################################
 
+SRC = $(wildcard *.cpp)
+OBJECTS = $(patsubst %.cpp, %.o, $(SRC))
+
 ### EXECUTABLE
 
-$(EXECUTABLE_NAME): main.o Point.o Canopy.o CanopyClustering.o Stats.o Log.o signal_handlers.o TimeProfile.o
-	$(COMP) -o $@ $(COMP_OPENMP) $(ADDITIONAL_OPTS) $(INCLUDES) $^ $(LIBS) 
+$(EXECUTABLE_NAME): $(OBJECTS) 
+	$(COMP) -o $@ $(COMP_OPENMP) $(LDFLAGS) $^ $(LIBS) 
 
-main.o:	main.cpp 
-	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-	
-Point.o: Point.cpp 
-	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-
-Canopy.o: Canopy.cpp 
-	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-
-CanopyClustering.o: CanopyClustering.cpp 
-	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-
-Stats.o: Stats.cpp 
-	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-
-TimeProfile.o: TimeProfile.cpp 
-	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-
-signal_handlers.o: signal_handlers.cpp 
-	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
-
-Log.o: Log.cpp 
-	$(COMP) -o$@ $(COMP_OPENMP) -c $(ADDITIONAL_OPTS) $(INCLUDES) $^
+%.o: %.cpp
+	$(COMP) -o $@ $(COMP_OPENMP) -c $(CFLAGS) $(INCLUDES) $^
 
 #### Targets
 
@@ -89,5 +72,5 @@ all: $(EXECUTABLE_NAME)
 .PHONY: clean
 
 clean:
-	-rm -f *.bin *.o *.d $(ADDITIONAL_FILES_TO_BE_DELETED) $(COMMON_DIR)*.o
+	rm -f *.bin *.o *.d $(ADDITIONAL_FILES_TO_BE_DELETED) $(COMMON_DIR)*.o
  
