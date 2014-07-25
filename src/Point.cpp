@@ -67,7 +67,6 @@ Point::Point(char* line){
         sample_data[i] = sample_data_vector[i];
     }
 
-    precompute_pearson_data(num_data_samples, sample_data, sample_data_pearson_precomputed);
 }
 
 Point::Point(const Point& p){
@@ -146,7 +145,6 @@ void verify_proper_point_input_or_die(const std::vector<Point*>& points){
         assert(point->num_data_samples == num_samples);
     }
 
-    _log(logINFO) << "Finished reading point input file";
     _log(logINFO) << "Observed number of samples per point: " << num_samples;
     _log(logINFO) << "Number of points read: " << points.size();
 

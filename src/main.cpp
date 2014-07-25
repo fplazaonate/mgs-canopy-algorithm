@@ -35,6 +35,7 @@
 #include <program_options_misc.hpp>
 #include <signal_handlers.hpp>
 
+#include <Stats.hpp>
 #include <omp.h>
 
 using namespace std;
@@ -232,7 +233,7 @@ int main(int argc, char* argv[])
 
     time_profile.start_timer("Reading points");
 
-    _log(logINFO) << "Reading points";
+    _log(logINFO) << "Reading point input file.";
 
 	// Should be sufficient for the biggest count matrices we have
 	char line[100000];
@@ -255,11 +256,10 @@ int main(int argc, char* argv[])
 
 		die_if_true(terminate_called);
 	}
+    _log(logINFO) << "Finished reading point input file.";
+    _log(logINFO) << "";
 
     time_profile.stop_timer("Reading points");
-
-    _log(logINFO) << "Points read.";
-    _log(logINFO) << "";
 
     _log(logINFO) << "Running basic validation of points";
     _log(logINFO) << "max_top_three_data_point_proportion:\t " << max_top_three_data_point_proportion;
@@ -347,9 +347,24 @@ int main(int argc, char* argv[])
     _log(logINFO) << "Finished input points processing";
     
     _log(logINFO) << "Number of points after filtering: " << filtered_points.size();
+    _log(logINFO) << "";
     
     die_if_true(terminate_called);
     die_if_true(filtered_points.size() < 1);
+
+
+    time_profile.start_timer("Computing pearson correlations.");
+    _log(logINFO) << "Computing pearson correlations.";
+	#pragma omp parallel for
+	for (size_t curr_point = 0; curr_point < filtered_points.size(); curr_point++)
+	{
+		Point* point = filtered_points[curr_point];
+		precompute_pearson_data(point->num_data_samples, point->sample_data, point->sample_data_pearson_precomputed);
+	}
+    _log(logINFO) << "Done.";
+    _log(logINFO) << "";
+    time_profile.stop_timer("Computing pearson correlations.");
+
     //
     //Run Canopy Clustering
     //
