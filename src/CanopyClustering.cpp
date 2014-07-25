@@ -38,69 +38,52 @@
 
 Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_neighbour_dist, double max_close_dist, bool set_close_points){
 
-	boost::dynamic_bitset<> in_neighbours(points.size());
+	std::vector<Point*> neighbours;
 
-    std::vector<Point*> neighbours;
+	if(set_close_points){
+		Point* potential_neighbour; 
 
-    if(set_close_points){
-		boost::dynamic_bitset<> in_close_points(points.size());
-        //Go through all points and set the close points to contain the ones that are "close"
-        for(size_t curr_point = 0; curr_point < points.size(); curr_point++){
-			Point* potential_neighbour = points[curr_point];
+		//Go through all points and set the close points to contain the ones that are "close"
+		close_points.clear();//Will not reallocate
+		for(int i=0; i<points.size(); i++){
 
-            double dist = get_distance_between_points(origin, potential_neighbour);
+			potential_neighbour = points[i];
 
-            if(dist < max_close_dist){
-				in_close_points[curr_point] = true;
+			double dist = get_distance_between_points(origin, potential_neighbour);
 
-                if(dist < max_neighbour_dist){
-					in_neighbours[curr_point] = true;
-                }
-            } 
-        }
+			if(dist < max_close_dist){
 
-		// Save points
-		close_points.resize(in_close_points.count());
-		neighbours.resize(in_neighbours.count());
+				close_points.push_back(potential_neighbour);
 
-        for(size_t curr_point = 0, offset_close_points = 0, offset_neighbours = 0; curr_point < points.size(); curr_point++){
-			Point* potential_neighbour = points[curr_point];
+				if(dist < max_neighbour_dist){
 
-            if(in_close_points[curr_point]){
-				close_points[offset_close_points++] = potential_neighbour;
-				
-				if (in_neighbours[curr_point]){
-					neighbours[offset_neighbours++]  = potential_neighbour;
+					neighbours.push_back(potential_neighbour);
+
 				}
+			} 
+		}
+
+	} else {
+
+		Point* potential_neighbour;
+
+		for(int i=0; i<close_points.size(); i++){
+
+			potential_neighbour = close_points[i];
+
+			double dist = get_distance_between_points(origin, potential_neighbour);
+
+			if(dist < max_neighbour_dist){
+				neighbours.push_back(potential_neighbour);
 			}
 		}
 
-    } else {
-		for(size_t curr_point = 0; curr_point < points.size(); curr_point++){
-			Point* potential_neighbour = points[curr_point];
-
-            double dist = get_distance_between_points(origin, potential_neighbour);
-   
-            if(dist < max_neighbour_dist){
-				in_neighbours[curr_point] = true;
-			}
-		}
-
-		neighbours.resize(in_neighbours.count());
-
-        for(size_t curr_point = 0, offset_neighbours = 0; curr_point < points.size(); curr_point++){
-			Point* potential_neighbour = points[curr_point];
-
-			if (in_neighbours[curr_point]) {
-				neighbours[offset_neighbours++] = potential_neighbour;
-			}
-		}
-    }
-
-    if(neighbours.size()){
-        return new Canopy(neighbours);
-    } else {
+	}
+	
+	if(neighbours.empty()){
         return new Canopy(origin);
+    } else {
+        return new Canopy(neighbours);
     }
 }
 
