@@ -27,7 +27,6 @@
 #include <omp.h>
 
 #include <boost/foreach.hpp>
-#include <boost/dynamic_bitset.hpp>
 
 
 #include <CanopyClustering.hpp>
@@ -138,75 +137,51 @@ Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, 
 }
 
 void CanopyClusteringAlg::filter_clusters_by_size(std::vector<Canopy*>& canopies_to_filter){
-	boost::dynamic_bitset<> canopies_to_remove(canopies_to_filter.size());
-
-    for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy ++) {
-        Canopy* canopy = canopies_to_filter[curr_canopy];
-        if(canopy->neighbours.size() < 2){
-			canopies_to_remove[curr_canopy] = true;
-        }
-    }
-
-
 	size_t canopies_kept = 0;
-    for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy++){
-        Canopy* canopy = canopies_to_filter[curr_canopy];
+	for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy ++) {
+		Canopy* canopy = canopies_to_filter[curr_canopy];
+		Point* ccenter = canopy->center;
 
-		if (canopies_to_remove[curr_canopy])
-			delete canopy; // Avoids memory leak?
-		else
+        if(canopy->neighbours.size() < 2){
+			delete canopy;
+		} else {
 			canopies_to_filter[canopies_kept++] =  canopy;
-	}
+		}
 
+	}
 	canopies_to_filter.resize(canopies_kept);
 }
 
 void CanopyClusteringAlg::filter_clusters_by_single_point_skew(double max_single_data_point_proportion, std::vector<Canopy*>& canopies_to_filter){
-
-	boost::dynamic_bitset<> canopies_to_remove(canopies_to_filter.size());
-
-    for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy ++) {
-        Canopy* canopy = canopies_to_filter[curr_canopy];
-        Point* ccenter = canopy->center;
-        if(!ccenter->check_if_single_point_proportion_is_smaller_than(max_single_data_point_proportion) ){
-			canopies_to_remove[curr_canopy] = true;
-        }
-    }
-
 	size_t canopies_kept = 0;
-    for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy++){
-        Canopy* canopy = canopies_to_filter[curr_canopy];
+	for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy ++) {
+		Canopy* canopy = canopies_to_filter[curr_canopy];
+		Point* ccenter = canopy->center;
 
-		if (canopies_to_remove[curr_canopy])
+        if(!ccenter->check_if_single_point_proportion_is_smaller_than(max_single_data_point_proportion) ){
 			delete canopy;
-		else
+		} else {
 			canopies_to_filter[canopies_kept++] =  canopy;
-	}
+		}
 
+	}
 	canopies_to_filter.resize(canopies_kept);
 }
 
 void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_medians, std::vector<Canopy*>& canopies_to_filter){
-	boost::dynamic_bitset<> canopies_to_remove(canopies_to_filter.size());
 
+	size_t canopies_kept = 0;
 	for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy ++) {
 		Canopy* canopy = canopies_to_filter[curr_canopy];
 		Point* ccenter = canopy->center;
+
 		if(! ccenter->check_if_num_non_zero_samples_is_greater_than_x(min_num_non_zero_medians) ){
-			canopies_to_remove[curr_canopy] = true;
-		}
-	}
-
-	size_t canopies_kept = 0;
-	for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy++){
-		Canopy* canopy = canopies_to_filter[curr_canopy];
-
-		if (canopies_to_remove[curr_canopy])
 			delete canopy;
-		else
+		} else {
 			canopies_to_filter[canopies_kept++] =  canopy;
-	}
+		}
 
+	}
 	canopies_to_filter.resize(canopies_kept);
 }
 
