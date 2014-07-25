@@ -24,11 +24,6 @@
 #include <fstream>
 #include <iomanip>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h> /* mmap() is defined in this header */
-#include <fcntl.h>
-
 #include <boost/program_options.hpp>
 
 #include <boost/foreach.hpp>
@@ -158,8 +153,10 @@ int main(int argc, char* argv[])
     check_if_file_is_readable("point_input_file",point_input_file);
     check_if_file_is_writable("output_file",output_file);
     check_if_file_is_writable("output_centers_file",output_centers_file);
-    check_if_file_is_writable("points_filtered_out_top_three_prop_file_path",points_filtered_out_top_three_prop_file_path);
-    check_if_file_is_writable("points_filtered_out_at_least_non_zero_file_path",points_filtered_out_at_least_non_zero_file_path);
+	if (points_filtered_out_top_three_prop_file_path != "")
+		check_if_file_is_writable("points_filtered_out_top_three_prop_file_path",points_filtered_out_top_three_prop_file_path);
+	if (points_filtered_out_at_least_non_zero_file_path != "")
+		check_if_file_is_writable("points_filtered_out_at_least_non_zero_file_path",points_filtered_out_at_least_non_zero_file_path);
     vector<string> valid_verbosities;
     valid_verbosities += "error", "progress", "warn", "info", "debug", "debug1", "debug2", "debug3";
     check_if_one_of("verbosity_option",verbosity_option, valid_verbosities);
@@ -227,56 +224,43 @@ int main(int argc, char* argv[])
     //
     //Parse point description file
     //
-    time_profile.start_timer("File loading");
 
     vector<Point*> points;
     vector<Point*> filtered_points;
 
-    int point_file;
-    char* point_file_mmap;
-    struct stat statbuf;
+	std::ifstream point_file(point_input_file.c_str());    
 
-    
-
-    /* open the input file */
-    point_file = open(point_input_file.c_str(), O_RDONLY);
-
-    /* find size of input file */
-    fstat(point_file,&statbuf);
-
-    /* mmap the input file */
-    point_file_mmap = (char*)mmap (0, statbuf.st_size, PROT_WRITE, MAP_PRIVATE, point_file, 0);
-
-    time_profile.stop_timer("File loading");
     time_profile.start_timer("Reading points");
 
-    _log(logINFO) << "File loaded into memory, generating points";
+    _log(logINFO) << "Reading points";
 
-    char* line_start_ptr = point_file_mmap;
-    char* line_end_ptr = point_file_mmap;
-    char* mmap_end_ptr = point_file_mmap + statbuf.st_size;
-    while(line_start_ptr < mmap_end_ptr){
-        line_end_ptr = line_start_ptr;
-        while(*line_end_ptr != '\n' && *line_end_ptr != '\r' && line_end_ptr < mmap_end_ptr){
-            line_end_ptr++;
-        }
-        if(line_end_ptr != line_start_ptr){//Check if the line is not empty
-            *line_end_ptr = '\0';
-            //cout << line_start_ptr << endl;
-            points.push_back(new Point(line_start_ptr));
-        }
-        line_start_ptr = ++line_end_ptr;
-        die_if_true(terminate_called);
-    }
+	// Should be sufficient for the biggest count matrices we have
+	char line[100000];
+
+	while (point_file.getline(line, 100000)) {
+		bool line_empty = true;
+
+		char* line_ptr = line;
+
+		while (line_empty && line_ptr++ != '\0')
+		{
+			if (!std::isspace(*line_ptr))
+				line_empty = false;
+		}
+
+		if (line_empty)
+			continue;
+
+		points.push_back(new Point(line));
+
+		die_if_true(terminate_called);
+	}
 
     time_profile.stop_timer("Reading points");
 
-    _log(logINFO) << "Points read, dropping file from memory";
+    _log(logINFO) << "Points read.";
     _log(logINFO) << "";
 
-    /* drop the file from memory*/
-    munmap(point_file_mmap, statbuf.st_size);
-    
     _log(logINFO) << "Running basic validation of points";
     _log(logINFO) << "max_top_three_data_point_proportion:\t " << max_top_three_data_point_proportion;
     _log(logINFO) << "min_non_zero_data_samples:\t " << min_non_zero_data_samples;

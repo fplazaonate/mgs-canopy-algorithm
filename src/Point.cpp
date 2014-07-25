@@ -38,14 +38,11 @@
 
 using namespace std;
 
-Point::Point(const char* line){
-    //Copy line to private buffer - strtok will modify it
-    char* private_line = new char[strlen(line) + 1];
-    strcpy(private_line,line);
+Point::Point(char* line){
     _log(logDEBUG3)<< "Point constructor, got: \"" << line << "\""; 
 
     //Read gene id - first word in the line
-    char* word = strtok(private_line, "\t ");
+    char* word = strtok(line, "\t ");
     id = string(word);
     _log(logDEBUG3)<< "Point constructor, point id: \"" << id << "\""; 
 
@@ -71,8 +68,6 @@ Point::Point(const char* line){
     }
 
     precompute_pearson_data(num_data_samples, sample_data, sample_data_pearson_precomputed);
-
-    delete private_line;
 }
 
 Point::Point(const Point& p){

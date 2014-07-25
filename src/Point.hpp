@@ -34,7 +34,7 @@ class Point {
         int num_data_samples;
 
         Point(const Point& p);
-        Point(const char* line);
+        Point(char* line);
         virtual ~Point();
         
         std::string id;
