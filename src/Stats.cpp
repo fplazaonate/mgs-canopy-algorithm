@@ -46,7 +46,7 @@ void precompute_pearson_data(int sample_data_length, const double* __restrict__ 
 	if(fabs(stddev) < 2* std::numeric_limits<double>::min())
 	{
 		for(size_t i = 0; i < sample_data_length; i++){
-			precomputed_pearson_data[i] = 0;
+			precomputed_pearson_data[i] = 0.0;
 		}
 	} else {
 		for(size_t i = 0; i < sample_data_length; i++){
