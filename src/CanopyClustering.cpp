@@ -190,7 +190,6 @@ void CanopyClusteringAlg::filter_clusters_by_single_point_skew(double max_single
         }
     }
 
-
 	size_t canopies_kept = 0;
     for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy++){
         Canopy* canopy = canopies_to_filter[curr_canopy];
@@ -205,23 +204,27 @@ void CanopyClusteringAlg::filter_clusters_by_single_point_skew(double max_single
 }
 
 void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_medians, std::vector<Canopy*>& canopies_to_filter){
+	boost::dynamic_bitset<> canopies_to_remove(canopies_to_filter.size());
 
-    vector<int> canopy_indexes_to_remove;
+	for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy ++) {
+		Canopy* canopy = canopies_to_filter[curr_canopy];
+		Point* ccenter = canopy->center;
+		if(! ccenter->check_if_num_non_zero_samples_is_greater_than_x(min_num_non_zero_medians) ){
+			canopies_to_remove[curr_canopy] = true;
+		}
+	}
 
-    for(int i=0; i < canopies_to_filter.size(); i++){
-        Point* ccenter = canopies_to_filter[i]->center;
-        if(! ccenter->check_if_num_non_zero_samples_is_greater_than_x(min_num_non_zero_medians) ){
-            delete ccenter;
-            canopy_indexes_to_remove.push_back(i);
-        }
-    }
+	size_t canopies_kept = 0;
+	for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy++){
+		Canopy* canopy = canopies_to_filter[curr_canopy];
 
-    std::sort(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
-    std::reverse(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
+		if (canopies_to_remove[curr_canopy])
+			delete canopy;
+		else
+			canopies_to_filter[canopies_kept++] =  canopy;
+	}
 
-    for(int i=0; i < canopy_indexes_to_remove.size(); i++)
-        canopies_to_filter.erase(canopies_to_filter.begin() + canopy_indexes_to_remove[i]);
-
+	canopies_to_filter.resize(canopies_kept);
 }
 
 std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
