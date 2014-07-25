@@ -100,7 +100,7 @@ Point::~Point(){
 bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
     int num_non_zero_samples = 0;
     for(int i=0; i < num_data_samples; i++){
-        if(sample_data[i] > 0.0000001){
+        if(sample_data[i] > 1e-7){
             num_non_zero_samples++;
             if(num_non_zero_samples >= x)
                 return true;
@@ -129,8 +129,8 @@ bool Point::check_if_top_three_point_proportion_is_smaller_than(double x){
 }
 
 bool Point::check_if_single_point_proportion_is_smaller_than(double x){
-    double sum_data_samples = 0;
-    double max_data_sample = 0;
+    double sum_data_samples = 0.0;
+    double max_data_sample = 0.0;
 
     for(int i=0; i < num_data_samples; i++){
         if(max_data_sample < sample_data[i])
@@ -159,7 +159,7 @@ void verify_proper_point_input_or_die(const std::vector<Point*>& points){
 double get_distance_between_points(const Point* p1, const Point* p2){
 
     int len = p1->num_data_samples;
-    double dist = 1 - fabs(pearsoncorr_from_precomputed(len, p1->sample_data_pearson_precomputed, p2->sample_data_pearson_precomputed));
+    double dist = 1.0 - fabs(pearsoncorr_from_precomputed(len, p1->sample_data_pearson_precomputed, p2->sample_data_pearson_precomputed));
 
     //if(log_level >= logDEBUG3){
     //    _log(logDEBUG3) << "<<<<<<DISTANCE<<<<<<";
@@ -206,7 +206,7 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
             median = point_samples[mid];
         }
 
-        assert(median != -1);
+        assert(median != -1.0);
 
         centroid->sample_data[i] = median;
     }
