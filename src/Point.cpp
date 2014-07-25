@@ -190,18 +190,14 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
 
     for(int i = 0; i < num_samples; i++){
 
-        std::vector<double> point_samples;
+        std::vector<double> point_samples(points.size());
 
-        BOOST_FOREACH(const Point* p, points){
-
-            //TODO: this is slow 
-            point_samples.push_back(p->sample_data[i]);
-
-        }
+		for (size_t curr_point = 0; curr_point < point_samples.size(); curr_point++)
+            point_samples[curr_point] = points[curr_point]->sample_data[i];
 
         std::sort(point_samples.begin(), point_samples.end());
 
-        double median = -1;
+        double median = -1.0;
 
         int mid = floor((point_samples.size() - 1)/2);
         if(!(point_samples.size()%2)){
