@@ -112,17 +112,15 @@ bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
 
 bool Point::check_if_top_three_point_proportion_is_smaller_than(double x){
 
-    vector<double> temp_data_samples;
-    temp_data_samples.resize(num_data_samples, 0.0);
-    std::copy(sample_data, sample_data + num_data_samples, temp_data_samples.begin());
+    vector<double> temp_data_samples(num_data_samples);
 
     std::sort(temp_data_samples.begin(), temp_data_samples.end(), std::greater<double>());
 
-    double sum_data_samples = std::accumulate(temp_data_samples.begin(), temp_data_samples.end(), 0.0 );
-    double sum_top_three = temp_data_samples[0] + temp_data_samples[1] + temp_data_samples[2]; 
+    double sum_data_samples = std::accumulate(temp_data_samples.begin(), temp_data_samples.end(), 0.0);
+    double sum_top_three = std::accumulate(temp_data_samples.begin(), temp_data_samples.begin()+3, 0.0);
 
-    if(sum_data_samples > 0.000000001){
-        return (sum_top_three / sum_data_samples) < x - 0.0000000001;
+    if(sum_data_samples > 1e-10){
+        return (sum_top_three / sum_data_samples) < (x - 1e-10);
     } else {
         //All samples have 0 value - can't divide by 0
         return false;
