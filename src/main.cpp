@@ -110,24 +110,24 @@ int main(int argc, char* argv[])
         ("verbosity,v", value<string>(&verbosity_option)->default_value("info"), "Control how much information should be printed to the screen. Available levels according to their verbosity: error, progress, warn, info, debug, debug1.");
 
     algorithm_param_options_desc.add_options()
-        ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1), "Max pearson correlation difference between a canopy center and a point included to the canopy")
-        ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4), "Max pearson correlation difference between a canopy center and a point in which the point will be considered close to the canopy. As a heuristc, only points within this distance will be considered as potential neighbours during the canopy walk.")
-        ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.05), "Max pearson correlation difference between two canopy centers in which the canopies should be merged. Please note, that the final canopy profiles are calculated after the merge step and consequently some final canopies might have profiles that are closer then max_merge_dist specifies.")
-        ("min_step_dist", value<double>(&min_step_dist)->default_value(0.01), "Min pearson correlation difference between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy (canopy walk). This is a stop criterion for canopy walk.")
+        ("max_canopy_dist", value<double>(&max_canopy_dist)->default_value(0.1,"0.1"), "Max pearson correlation difference between a canopy center and a point included to the canopy")
+        ("max_close_dist", value<double>(&max_close_dist)->default_value(0.4,"0.4"), "Max pearson correlation difference between a canopy center and a point in which the point will be considered close to the canopy. As a heuristc, only points within this distance will be considered as potential neighbours during the canopy walk.")
+        ("max_merge_dist", value<double>(&max_merge_dist)->default_value(0.05,"0.05"), "Max pearson correlation difference between two canopy centers in which the canopies should be merged. Please note, that the final canopy profiles are calculated after the merge step and consequently some final canopies might have profiles that are closer then max_merge_dist specifies.")
+        ("min_step_dist", value<double>(&min_step_dist)->default_value(0.01,"0.01"), "Min pearson correlation difference between canopy center and canopy centroid in which the centroid will be used as an origin for a new canpy (canopy walk). This is a stop criterion for canopy walk.")
         ("max_num_canopy_walks", value<int>(&max_num_canopy_walks)->default_value(3), "Max number of times the canopy will walk. This is a stop criterion for canopy walk.");
 
     filter_in_options_desc.add_options()
         ("filter_min_obs", value<int>(&min_non_zero_data_samples)->default_value(3), "Discard those points which have fewer than N non-zero data points (observations). Setting it to 0 will disable the filter.")
-        ("filter_max_dominant_obs", value<double>(&max_top_three_data_point_proportion)->default_value(0.9), "Discard those points for which top 3 data points constitute more than X fraction of the total signal. Setting it to 1 will disable the filter")
+        ("filter_max_dominant_obs", value<double>(&max_top_three_data_point_proportion)->default_value(0.9,"0.9"), "Discard those points for which top 3 data points constitute more than X fraction of the total signal. Setting it to 1 will disable the filter")
         ("filtered_out_points_min_obs_file", value<string>(&points_filtered_out_at_least_non_zero_file_path)->default_value(""), "File to which write out those files that didn't match the filter_min_obs filter")
         ("filtered_out_points_max_dominant_obs_file", value<string>(&points_filtered_out_top_three_prop_file_path)->default_value(""), "File to which write out those files that didn't match the filter_max_dominant_obs filter.");
 
     filter_out_options_desc.add_options()
         ("filter_zero_medians", value<int>(&min_num_non_zero_medians)->default_value(3), "Return only those canopies that have at least N non-zero cluster profile observations. Setting it to 0 will disable the filter.")
-        ("filter_single_point", value<double>(&max_single_data_point_proportion)->default_value(0.9), "Don't return canopies containing a single profile observation which constitutes to more than X fraction of the total profile. Setting it to 1 disables the filter.");
+        ("filter_single_point", value<double>(&max_single_data_point_proportion)->default_value(0.9,"0.9"), "Don't return canopies containing a single profile observation which constitutes to more than X fraction of the total profile. Setting it to 1 disables the filter.");
 
     early_stop_options_desc.add_options()
-        ("stop_fraction", value<double>(&stop_proportion_of_points)->default_value(1.0), "Stop clustering after X fraction of all points have been clustered. Setting it to 1 will disable this stop criterion.");
+        ("stop_fraction", value<double>(&stop_proportion_of_points)->default_value(1.0,"1.0"), "Stop clustering after X fraction of all points have been clustered. Setting it to 1 will disable this stop criterion.");
 
     misc_options_desc.add_options()
         ("die_on_kill", bool_switch(&die_on_kill), "If set, after receiving a KILL signal, the program will die and no results will be produced. By default clustering will stop but clusters will be merged and partial results will be printed as usual.")
