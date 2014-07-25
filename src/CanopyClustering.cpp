@@ -180,22 +180,28 @@ void CanopyClusteringAlg::filter_clusters_by_size(std::vector<Canopy*>& canopies
 
 void CanopyClusteringAlg::filter_clusters_by_single_point_skew(double max_single_data_point_proportion, std::vector<Canopy*>& canopies_to_filter){
 
-    vector<int> canopy_indexes_to_remove;
+	boost::dynamic_bitset<> canopies_to_remove(canopies_to_filter.size());
 
-    for(int i=0; i < canopies_to_filter.size(); i++){
-        Point* ccenter = canopies_to_filter[i]->center;
-        if(! ccenter->check_if_single_point_proportion_is_smaller_than(max_single_data_point_proportion) ){
-            delete ccenter;
-            canopy_indexes_to_remove.push_back(i);
+    for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy ++) {
+        Canopy* canopy = canopies_to_filter[curr_canopy];
+        Point* ccenter = canopy->center;
+        if(!ccenter->check_if_single_point_proportion_is_smaller_than(max_single_data_point_proportion) ){
+			canopies_to_remove[curr_canopy] = true;
         }
     }
 
-    std::sort(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
-    std::reverse(canopy_indexes_to_remove.begin(), canopy_indexes_to_remove.end());
 
-    for(int i=0; i < canopy_indexes_to_remove.size(); i++)
-        canopies_to_filter.erase(canopies_to_filter.begin() + canopy_indexes_to_remove[i]);
+	size_t canopies_kept = 0;
+    for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy++){
+        Canopy* canopy = canopies_to_filter[curr_canopy];
 
+		if (canopies_to_remove[curr_canopy])
+			delete canopy;
+		else
+			canopies_to_filter[canopies_kept++] =  canopy;
+	}
+
+	canopies_to_filter.resize(canopies_kept);
 }
 
 void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_medians, std::vector<Canopy*>& canopies_to_filter){
