@@ -243,19 +243,21 @@ int main(int argc, char* argv[])
 
 		char* line_ptr = line;
 
-		while (line_empty && line_ptr++ != '\0')
+		// Skip blank spaces at the beginning of the line
+		while (*line_ptr != '\0' && std::isspace(*line_ptr))
 		{
-			if (!std::isspace(*line_ptr))
-				line_empty = false;
+			line_ptr++;
 		}
 
-		if (line_empty)
+		// Line is empty
+		if (*line_ptr == '\0')
 			continue;
 
-		points.push_back(new Point(line));
+		points.push_back(new Point(line_ptr));
 
 		die_if_true(terminate_called);
 	}
+
     _log(logINFO) << "Finished reading point input file.";
     _log(logINFO) << "";
 
