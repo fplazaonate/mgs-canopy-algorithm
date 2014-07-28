@@ -43,7 +43,6 @@ class Point {
         bool check_if_single_point_proportion_is_smaller_than(double x);
         bool check_if_top_three_point_proportion_is_smaller_than(double x);
 
-        friend double* precompute_pearson_data(double* sample_data);
         friend std::size_t hash_value(const Point &p);
         friend std::ostream& operator<<(std::ostream& ost, const Point& ls);
 
@@ -51,7 +50,5 @@ class Point {
         friend Point* get_centroid_of_points(const std::vector<Point*>& points);
         friend void verify_proper_point_input_or_die(const std::vector<Point*>& points);
 };
-
-
 
 #endif
