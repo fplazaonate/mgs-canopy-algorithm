@@ -20,20 +20,10 @@
  */
 #include <Log.hpp>
 
-loglevel_e log_level = logDEBUG4;
+loglevel_e Logger::log_level = logDEBUG4;
 
-Logger::Logger(loglevel_e _loglevel) {
-    //buffer << _loglevel << " :" << std::string( 
-    //        _loglevel > logDEBUG 
-    //            ? (_loglevel - logDEBUG) * 4 
-    //            : 1
-    //            , ' ');
-    //for(int i = _loglevel - logDEBUG + 1; i > 0 ; i--)
-    //    buffer << "\t";
-
+Logger::Logger() {
 }
-
-//template<typename T> Logger& Logger::operator<<(T const & value)
 
 Logger::~Logger()
 {

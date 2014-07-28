@@ -261,7 +261,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
         {
             //Only master thread executes this
             if(omp_get_thread_num() == 0){
-                if(log_level >= logPROGRESS && show_progress_bar){
+                if(Logger::log_level >= logPROGRESS && show_progress_bar){
                     if(marked_points.size() > last_progress_displayed_at_num_points + stop_proportion_of_points * points.size()/100){
                         printProgBar(marked_points.size(),stop_proportion_of_points * points.size());
                         last_progress_displayed_at_num_points = marked_points.size();
@@ -412,7 +412,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
             //Show progress bar
             {
-                if(log_level >= logPROGRESS && show_progress_bar){
+                if(Logger::log_level >= logPROGRESS && show_progress_bar){
                     if(original_number_of_canopies - canopy_vector.size() % 1000)
                         printProgBar(original_number_of_canopies - canopy_vector.size(), original_number_of_canopies );
                 }

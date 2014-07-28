@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     //
     
     //Set initial logging level
-    log_level = logINFO;
+	Logger::log_level = logINFO;
 
 
     //Preapre Time Profile
@@ -182,21 +182,21 @@ int main(int argc, char* argv[])
     //Set user chosen logging level
     //
     if(verbosity_option == "error"){
-        log_level = logERR;
+		Logger::log_level = logERR;
     }else if(verbosity_option == "progress"){
-        log_level = logPROGRESS;
+		Logger::log_level = logPROGRESS;
     }else if(verbosity_option == "warn"){
-        log_level = logWARN;
+		Logger::log_level = logWARN;
     }else if(verbosity_option == "info"){
-        log_level = logINFO;
+		Logger::log_level = logINFO;
     }else if(verbosity_option == "debug"){
-        log_level = logDEBUG;
+		Logger::log_level = logDEBUG;
     }else if(verbosity_option == "debug1"){
-        log_level = logDEBUG1;
+		Logger::log_level = logDEBUG1;
     }else if(verbosity_option == "debug2"){
-        log_level = logDEBUG2;
+		Logger::log_level = logDEBUG2;
     }else if(verbosity_option == "debug3"){
-        log_level = logDEBUG3;
+		Logger::log_level = logDEBUG3;
     }
 
     _log(logINFO) << "";
