@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
 #include <functional>
 #include <numeric>
 
@@ -41,19 +40,21 @@ using namespace std;
 Point::Point(char* line){
     _log(logDEBUG3)<< "Point constructor, got: \"" << line << "\""; 
 
+	char* line_ptr = line;
+
     //Read gene id - first word in the line
-    char* word = strtok(line, "\t ");
-    id = string(word);
+	while (*line_ptr != '\0' && !std::isspace(*line_ptr))
+			line_ptr++;
+    id = string(line, line_ptr-line);
+
     _log(logDEBUG3)<< "Point constructor, point id: \"" << id << "\""; 
 
     //Fill vector with data samples
     std::vector<double> sample_data_vector;
     sample_data_vector.reserve(700);
 
-    word = strtok(NULL, "\t ");
-    while( word != NULL ){
-        sample_data_vector.push_back((double)atof(word));
-        word = strtok(NULL, "\t ");
+    while(*line_ptr != '\0' ){
+        sample_data_vector.push_back(strtod(line_ptr,&line_ptr));
     }
 
     //Get number of samples for this point
