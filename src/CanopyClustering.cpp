@@ -363,8 +363,8 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
         canopies_to_merge.push_back(c);
 
-        //Get indexes of those canopies that are nearby
-//#pragma omp parallel for shared(canopies_to_merge) 
+        //Get canopies that are nearby
+		size_t canopies_not_to_merge = 0;
         for(int i = 0; i < canopy_vector.size(); i++){
 
             Canopy* c2 = canopy_vector[i]; 
@@ -372,13 +372,12 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
             double dist = get_distance_between_points(c->center, c2->center);
 
             if(dist < max_merge_dist){
-//#pragma omp critical
-                {
-                    canopies_to_merge.push_back(c2);
-                }
-            }
-
+				canopies_to_merge.push_back(c2);
+            } else {
+				canopy_vector[canopies_not_to_merge++] = c2;
+			}
         }
+		canopy_vector.resize(canopies_not_to_merge);
 
         //There are several canopies to merge, do it
         if( canopies_to_merge.size() > 1 ){
@@ -401,9 +400,8 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
             canopy_vector.push_back(merged_canopy);
 
             
-            //Removed merged canopies //TODO might be slow
+            //Removed merged canopies 
             BOOST_FOREACH(Canopy* canopy, canopies_to_merge){
-                canopy_vector.erase(remove(canopy_vector.begin(), canopy_vector.end(), canopy), canopy_vector.end());
                 delete canopy;
             }
 
