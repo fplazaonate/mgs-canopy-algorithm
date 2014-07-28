@@ -63,7 +63,7 @@ Point::Point(char* line){
 
     //Allocate and copy samples into array
     sample_data = new double[num_data_samples];
-    sample_data_pearson_precomputed = new double[num_data_samples]; 
+    sample_data_pearson_precomputed = NULL; 
     for(size_t i = 0; i < sample_data_vector.size(); i++){
         sample_data[i] = sample_data_vector[i];
     }

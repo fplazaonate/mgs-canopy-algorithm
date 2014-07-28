@@ -354,8 +354,15 @@ int main(int argc, char* argv[])
     die_if_true(filtered_points.size() < 1);
 
 
-    time_profile.start_timer("Computing pearson correlations.");
-    _log(logINFO) << "Computing pearson correlations.";
+    time_profile.start_timer("Precomputing pearson correlations.");
+    _log(logINFO) << "Precomputing pearson correlations.";
+
+	for (size_t curr_point = 0; curr_point < filtered_points.size(); curr_point++)
+	{
+		Point* point = filtered_points[curr_point];
+		point->sample_data_pearson_precomputed = new double[point->num_data_samples];
+	}
+
 	#pragma omp parallel for
 	for (size_t curr_point = 0; curr_point < filtered_points.size(); curr_point++)
 	{
@@ -364,7 +371,7 @@ int main(int argc, char* argv[])
 	}
     _log(logINFO) << "Done.";
     _log(logINFO) << "";
-    time_profile.stop_timer("Computing pearson correlations.");
+    time_profile.stop_timer("Precomputing pearson correlations.");
 
     //
     //Run Canopy Clustering
