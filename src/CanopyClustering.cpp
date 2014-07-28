@@ -44,7 +44,7 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
 
 		//Go through all points and set the close points to contain the ones that are "close"
 		close_points.clear();//Will not reallocate
-		for(int i=0; i<points.size(); i++){
+		for(size_t i=0; i<points.size(); i++){
 
 			potential_neighbour = points[i];
 
@@ -66,7 +66,7 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
 
 		Point* potential_neighbour;
 
-		for(int i=0; i<close_points.size(); i++){
+		for(size_t i=0; i<close_points.size(); i++){
 
 			potential_neighbour = close_points[i];
 
@@ -140,7 +140,6 @@ void CanopyClusteringAlg::filter_clusters_by_size(std::vector<Canopy*>& canopies
 	size_t canopies_kept = 0;
 	for (size_t curr_canopy = 0; curr_canopy < canopies_to_filter.size(); curr_canopy ++) {
 		Canopy* canopy = canopies_to_filter[curr_canopy];
-		Point* ccenter = canopy->center;
 
         if(canopy->neighbours.size() < 2){
 			delete canopy;
@@ -185,7 +184,7 @@ void CanopyClusteringAlg::filter_clusters_by_zero_medians(int min_num_non_zero_m
 	canopies_to_filter.resize(canopies_kept);
 }
 
-std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
+std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Point*>& points, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, string canopy_size_stats_fp, string not_processed_points_fp, bool show_progress_bar, TimeProfile& time_profile){
 
     _log(logINFO) << "";
     _log(logINFO) << "Algorithm Parameters:";
@@ -232,10 +231,10 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
     int num_canopy_jumps = 0;
     int num_collisions = 0;
 
-    int first_non_processed_origin_due_interruption = points.size();
+    size_t first_non_processed_origin_due_interruption = points.size();
 
 #pragma omp parallel for shared(marked_points, canopy_vector, num_canopy_jumps, canopy_size_per_origin_num, num_collisions, canopy_stats_row_num, terminate_called, first_non_processed_origin_due_interruption) firstprivate(close_points, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, last_progress_displayed_at_num_points) schedule(dynamic)
-    for(int origin_i = 0; origin_i < points.size(); origin_i++){
+    for(size_t origin_i = 0; origin_i < points.size(); origin_i++){
 
         //Early stopping proportion of points
         if(marked_points.size() > stop_proportion_of_points * points.size()){
@@ -322,11 +321,11 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
         ofstream not_processed_points_file;
         not_processed_points_file.open(not_processed_points_fp.c_str(), ios::out | ios::trunc);
-        for(int i = first_non_processed_origin_due_interruption; i < points.size(); i++){
+        for(size_t i = first_non_processed_origin_due_interruption; i < points.size(); i++){
             Point* point = points[i];
             if(marked_points.find(point) == marked_points.end()){
                 not_processed_points_file << point->id;
-                for(int j = 0; j < point->num_data_samples; j++){
+                for(size_t j = 0; j < point->num_data_samples; j++){
                     not_processed_points_file << "\t" << point->sample_data[j];
                 }
                 not_processed_points_file << "\n";
@@ -365,7 +364,7 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
         //Get canopies that are nearby
 		size_t canopies_not_to_merge = 0;
-        for(int i = 0; i < canopy_vector.size(); i++){
+        for(size_t i = 0; i < canopy_vector.size(); i++){
 
             Canopy* c2 = canopy_vector[i]; 
 

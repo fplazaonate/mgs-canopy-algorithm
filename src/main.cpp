@@ -239,7 +239,6 @@ int main(int argc, char* argv[])
 	char line[100000];
 
 	while (point_file.getline(line, 100000)) {
-		bool line_empty = true;
 
 		char* line_ptr = line;
 
@@ -278,7 +277,7 @@ int main(int argc, char* argv[])
     time_profile.start_timer("Input point filtering");
 
 #pragma omp parallel for shared(points_filtered_out_due_to_three_point_proportion_filter, points_filtered_out_due_to_num_non_zero_samples_filter, filtered_points)
-    for(int i = 0; i < points.size(); i++){
+    for(size_t i = 0; i < points.size(); i++){
         //Both filters are set
         if((min_non_zero_data_samples > 0) && (max_top_three_data_point_proportion < 0.9999)){
             bool point_is_valid = true;
@@ -326,7 +325,7 @@ int main(int argc, char* argv[])
     if(points_filtered_out_at_least_non_zero_file_path != ""){
         ofstream filtered_point_file;
         filtered_point_file.open(points_filtered_out_at_least_non_zero_file_path.c_str(), ios::out | ios::trunc);
-        for(int i = 0; i < points_filtered_out_due_to_num_non_zero_samples_filter.size(); i++){
+        for(size_t i = 0; i < points_filtered_out_due_to_num_non_zero_samples_filter.size(); i++){
             filtered_point_file << points[i]->id << "\n";
         }
         filtered_point_file.close();
@@ -335,7 +334,7 @@ int main(int argc, char* argv[])
     if(points_filtered_out_top_three_prop_file_path != ""){
         ofstream filtered_point_file;
         filtered_point_file.open(points_filtered_out_top_three_prop_file_path.c_str(), ios::out | ios::trunc);
-        for(int i = 0; i < points_filtered_out_due_to_three_point_proportion_filter.size(); i++){
+        for(size_t i = 0; i < points_filtered_out_due_to_three_point_proportion_filter.size(); i++){
             filtered_point_file << points[i]->id << "\n";
         }
         filtered_point_file.close();
@@ -372,7 +371,7 @@ int main(int argc, char* argv[])
     //
     std::vector<Canopy*> canopies;
 
-    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, num_threads, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, max_num_canopy_walks, stop_proportion_of_points, canopy_size_stats_file, not_processed_points_file, show_progress_bar, time_profile);
+    canopies = CanopyClusteringAlg::multi_core_run_clustering_on(filtered_points, max_canopy_dist, max_close_dist, max_merge_dist, min_step_dist, max_num_canopy_walks, stop_proportion_of_points, canopy_size_stats_file, not_processed_points_file, show_progress_bar, time_profile);
 
     _log(logINFO) << "Finished clustering, number of canopies:" << canopies.size();
 
@@ -428,7 +427,7 @@ int main(int argc, char* argv[])
     BOOST_FOREACH(Canopy* c, canopies){
         out_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
         
-        for(int j=0; j < c->center->num_data_samples; j++){
+        for(size_t j=0; j < c->center->num_data_samples; j++){
             out_file << c->center->sample_data[j] << "\t" ;
         }
 

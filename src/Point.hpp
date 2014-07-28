@@ -31,7 +31,7 @@ class Point {
     public:
         double* sample_data;
         double* sample_data_pearson_precomputed;
-        int num_data_samples;
+        size_t num_data_samples;
 
         Point(const Point& p);
         Point(char* line);

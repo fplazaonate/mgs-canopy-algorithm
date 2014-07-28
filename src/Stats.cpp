@@ -25,18 +25,18 @@
 #include <math.h>
 #include <limits>
 
-void precompute_pearson_data(int sample_data_length, const double* __restrict__ sample_data, double* __restrict__ precomputed_pearson_data){
+void precompute_pearson_data(size_t sample_data_length, const double* __restrict__ sample_data, double* __restrict__ precomputed_pearson_data){
 
     //Calculate sum and average of data samples
     double sum = 0, avg = 0;
-    for(int i = 0; i < sample_data_length; i++)
+    for(size_t i = 0; i < sample_data_length; i++)
         sum += sample_data[i];
 
     avg =  sum / sample_data_length;
 
     //Calculate standard deviation of data samples
     double factor_sum = 0;
-    for(int i = 0; i < sample_data_length; i++)
+    for(size_t i = 0; i < sample_data_length; i++)
         factor_sum += pow((sample_data[i] - avg),2);
 
     double stddev = 0;

@@ -53,5 +53,6 @@ std::ostream& operator<<(std::ostream& ost, const TimeProfile& tp)
     }
     ost << ">>>>>>>>>>END>>>>>>>>" << std::endl;
 
+	return ost;
 }
 

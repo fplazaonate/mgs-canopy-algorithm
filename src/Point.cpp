@@ -64,7 +64,7 @@ Point::Point(char* line){
     //Allocate and copy samples into array
     sample_data = new double[num_data_samples];
     sample_data_pearson_precomputed = new double[num_data_samples]; 
-    for(int i = 0; i < sample_data_vector.size(); i++){
+    for(size_t i = 0; i < sample_data_vector.size(); i++){
         sample_data[i] = sample_data_vector[i];
     }
 
@@ -75,12 +75,12 @@ Point::Point(const Point& p){
     num_data_samples = p.num_data_samples;
 
     sample_data = new double[num_data_samples];
-    for(int i=0; i < num_data_samples;i++){
+    for(size_t i=0; i < num_data_samples;i++){
         sample_data[i] = p.sample_data[i];
     }
 
     sample_data_pearson_precomputed = new double[num_data_samples];
-    for(int i=0; i < num_data_samples;i++){
+    for(size_t i=0; i < num_data_samples;i++){
         sample_data_pearson_precomputed[i] = p.sample_data_pearson_precomputed[i];
     }
 }
@@ -94,7 +94,7 @@ Point::~Point(){
 
 bool Point::check_if_num_non_zero_samples_is_greater_than_x(int x){
     int num_non_zero_samples = 0;
-    for(int i=0; i < num_data_samples; i++){
+    for(size_t i=0; i < num_data_samples; i++){
         if(sample_data[i] > 1e-7){
             num_non_zero_samples++;
             if(num_non_zero_samples >= x)
@@ -128,7 +128,7 @@ bool Point::check_if_single_point_proportion_is_smaller_than(double x){
     double sum_data_samples = 0.0;
     double max_data_sample = 0.0;
 
-    for(int i=0; i < num_data_samples; i++){
+    for(size_t i=0; i < num_data_samples; i++){
         if(max_data_sample < sample_data[i])
             max_data_sample = sample_data[i];
 
@@ -141,7 +141,7 @@ bool Point::check_if_single_point_proportion_is_smaller_than(double x){
 void verify_proper_point_input_or_die(const std::vector<Point*>& points){
     
     //Verify all points have the same number of samples
-    int num_samples = points[0]->num_data_samples;
+    size_t num_samples = points[0]->num_data_samples;
     BOOST_FOREACH(const Point* point, points){
         assert(point->num_data_samples == num_samples);
     }
@@ -221,7 +221,7 @@ std::ostream& operator<<(std::ostream& ost, const Point& p)
 {
         ost << "============================" << std::endl;
         ost << "Point: " << p.id << std::endl;
-        for(int i=0; i < p.num_data_samples; i++){
+        for(size_t i=0; i < p.num_data_samples; i++){
             ost << p.sample_data[i] << "\t" ;
         }
         ost << std::endl;

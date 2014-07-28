@@ -40,13 +40,11 @@ class CanopyClusteringAlg{
          *
          * Parameters:
          * points - list of references to points to be clustered
-         * num_threads - number of threads to be used in the calculation
-         * max_canopy_dist, max_close_dist, max_merge_dist, max_num_canopy_walks, stop_proportion_of_points, show_progress_bar - see program parameters description 
          * canopy_size_stats_fp - absolute file path to the canopy size statistics file
          * not_procesed_point_fp - absolute file path to the file containing not processed points if early stopped
          * time_profile - TimeProfile object instance for gathering statistics on time it took for each of the analysis steps
          */
-        static std::vector<Canopy*> multi_core_run_clustering_on(vector<Point*>& points, int num_threads, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, string canopy_size_stats_fp, string not_processed_points_fp,  bool show_progress_bar, TimeProfile& time_profile);
+        static std::vector<Canopy*> multi_core_run_clustering_on(vector<Point*>& points, double max_canopy_dist, double max_close_dist, double max_merge_dist, double min_step_dist, int max_num_canopy_walks, double stop_proportion_of_points, string canopy_size_stats_fp, string not_processed_points_fp,  bool show_progress_bar, TimeProfile& time_profile);
 
         /**
          * Create canopy given an origin point

@@ -57,7 +57,7 @@ std::ostream& operator<<(std::ostream& ost, const Canopy& c)
     //ost << std::endl;
     ost << ">>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
 
-
+	return ost;
 }
 
 bool compare_canopy_ptrs_by_canopy_size(const Canopy* a, const Canopy* b){

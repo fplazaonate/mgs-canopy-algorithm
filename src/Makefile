@@ -36,7 +36,7 @@ COMP = $(GNU_COMP)
 COMP_OPENMP = $(GNU_OPENMP)
 endif
 
-CFLAGS = -O3 -march=native
+CFLAGS = -Wall -Wextra -O3 -march=native
 BOOST_INCDIR=
 INCLUDES = -I./ $(BOOST_INCDIR)
 
