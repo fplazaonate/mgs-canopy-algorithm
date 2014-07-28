@@ -271,6 +271,7 @@ int main(int argc, char* argv[])
     verify_proper_point_input_or_die(points);
     time_profile.stop_timer("Point validation");
 
+    vector<Point*> points_filtered_out;
     vector<Point*> points_filtered_out_due_to_three_point_proportion_filter;
     vector<Point*> points_filtered_out_due_to_num_non_zero_samples_filter;
 
@@ -299,16 +300,20 @@ int main(int argc, char* argv[])
             if(point_is_valid){
 #pragma omp critical
                 filtered_points.push_back(points[i]);
-            }
+            } else {
+#pragma omp critical
+				points_filtered_out.push_back(points[i]);
+			}
         } else if (min_non_zero_data_samples > 0){ 
             if(points[i]->check_if_num_non_zero_samples_is_greater_than_x(min_non_zero_data_samples)){
 #pragma omp critical
                 filtered_points.push_back(points[i]);
             }
             else 
-            {
 #pragma omp critical
+            {
                 points_filtered_out_due_to_num_non_zero_samples_filter.push_back(points[i]);
+				points_filtered_out.push_back(points[i]);
             }
         } else if (max_top_three_data_point_proportion < 0.9999){ 
             if(points[i]->check_if_top_three_point_proportion_is_smaller_than(max_top_three_data_point_proportion)){ 
@@ -316,9 +321,10 @@ int main(int argc, char* argv[])
                 filtered_points.push_back(points[i]);
             }
             else 
-            {
 #pragma omp critical
+            {
                 points_filtered_out_due_to_three_point_proportion_filter.push_back(points[i]);
+				points_filtered_out.push_back(points[i]);
             }
         }
     }
@@ -339,11 +345,14 @@ int main(int argc, char* argv[])
         }
         filtered_point_file.close();
     }
+	
+	BOOST_FOREACH(Point* p, points_filtered_out)
+		delete p;
 
     time_profile.stop_timer("Input point filtering");
     _log(logINFO) << "Number of points filtered out due to three point sample values proportion filter: " << points_filtered_out_due_to_three_point_proportion_filter.size();
     _log(logINFO) << "Number of points filtered out due to non zero samples number filter: " << points_filtered_out_due_to_num_non_zero_samples_filter.size();
-    _log(logINFO) << "Number of points filtered out: " << points.size() - filtered_points.size(); 
+    _log(logINFO) << "Number of points filtered out: " << points_filtered_out.size(); 
 
     _log(logINFO) << "Finished input points processing";
     
@@ -449,7 +458,7 @@ int main(int argc, char* argv[])
     BOOST_FOREACH(Canopy* c, canopies)
         delete c;
 
-    BOOST_FOREACH(Point* point, points)
+    BOOST_FOREACH(Point* point, filtered_points)
         if(point)//Some points were centers of canopies and were deleted already
             delete point;
 
