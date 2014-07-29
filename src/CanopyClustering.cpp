@@ -35,7 +35,7 @@
 #include <signal_handlers.hpp>
 #include <prog_bar_misc.hpp>
 
-Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_neighbour_dist, double max_close_dist, bool set_close_points){
+Canopy* CanopyClusteringAlg::create_canopy(const Point* origin, const vector<Point*>& points, vector<Point*>& close_points, double max_neighbour_dist, double max_close_dist, bool set_close_points){
 
 	std::vector<Point*> neighbours;
 
@@ -86,7 +86,7 @@ Canopy* CanopyClusteringAlg::create_canopy(Point* origin, vector<Point*>& points
     }
 }
 
-Canopy* CanopyClusteringAlg::canopy_walk(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_canopy_dist, double max_close_dist, double min_step_dist, double max_num_canopy_walks, int& num_canopy_jumps){
+Canopy* CanopyClusteringAlg::canopy_walk(const Point* origin, const vector<Point*>& points, vector<Point*>& close_points, double max_canopy_dist, double max_close_dist, double min_step_dist, double max_num_canopy_walks, int& num_canopy_jumps){
 
     Canopy *c1;
     Canopy *c2;

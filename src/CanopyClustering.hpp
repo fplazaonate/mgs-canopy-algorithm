@@ -57,7 +57,7 @@ class CanopyClusteringAlg{
          * min_close_correlation - minimum distance in correlation space between origin and a tested point for the point to be considered close to the canopy
          * sets_close_points - flag describing if the current execution of this function should set the close_points
          */
-        static Canopy* create_canopy(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double min_neighbour_correlation, double min_close_correlation, bool sets_close_points);
+        static Canopy* create_canopy(const Point* origin, const vector<Point*>& points, vector<Point*>& close_points, double min_neighbour_correlation, double min_close_correlation, bool sets_close_points);
         
         /**
          * Execute the create_canopy function iteratively until a stable canopy is reached. 
@@ -69,7 +69,7 @@ class CanopyClusteringAlg{
          * max_canopy_dist, max_close_dist, min_step_dist, max_num_canopy_walks  - see program parameters
          * num_canopy_jumps - number of times the create_canopy function was executed
          */
-        static Canopy* canopy_walk(Point* origin, vector<Point*>& points, vector<Point*>& close_points, double max_canopy_dist, double max_close_dist, double min_step_dist, double max_num_canopy_walks, int& num_canopy_jumps);
+        static Canopy* canopy_walk(const Point* origin, const vector<Point*>& points, vector<Point*>& close_points, double max_canopy_dist, double max_close_dist, double min_step_dist, double max_num_canopy_walks, int& num_canopy_jumps);
 
         static void filter_clusters_by_zero_medians(int min_num_non_zero_medians, vector<Canopy*>& canopies_to_filter);
         static void filter_clusters_by_single_point_skew(double max_single_data_point_proportion, vector<Canopy*>& canopies_to_filter);

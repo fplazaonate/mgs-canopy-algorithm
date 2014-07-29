@@ -33,10 +33,10 @@ using namespace std;
 class Canopy {
     public:
         //Constructor - copies the given point as center, neighbours are empty (used only in rare cases) 
-        Canopy(Point* center_to_copy);
+        Canopy(const Point* center_to_copy);
 
         //Constructor - assigns the neighour points and creates new point for center (representing canopy profile) 
-        Canopy(std::vector<Point*> neighbours);
+        Canopy(const std::vector<Point*>& neighbours);
 
         //Destructor - deletes only the center point - not the neighours
         virtual ~Canopy();
