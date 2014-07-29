@@ -262,6 +262,11 @@ int main(int argc, char* argv[])
 
     time_profile.stop_timer("Reading points");
 
+	if (points.empty()) {
+        _log(logERR) << "Input has no data.";
+		exit(1);
+	}
+
     _log(logINFO) << "Running basic validation of points";
     _log(logINFO) << "max_top_three_data_point_proportion:\t " << max_top_three_data_point_proportion;
     _log(logINFO) << "min_non_zero_data_samples:\t " << min_non_zero_data_samples;
