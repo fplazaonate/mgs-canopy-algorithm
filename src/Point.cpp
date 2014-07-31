@@ -87,8 +87,8 @@ Point::Point(const Point& p){
 
 
 Point::~Point(){
-    delete sample_data;
-    delete sample_data_pearson_precomputed;
+    delete[] sample_data;
+    delete[] sample_data_pearson_precomputed;
 }
 
 
