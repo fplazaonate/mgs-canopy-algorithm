@@ -26,17 +26,9 @@
 
 using namespace std;
 
-bool check_if_within_bounds(string option_name, double value, double lower, double higher){
-    if( value >= lower - numeric_limits<double>::epsilon() && value <= higher + numeric_limits<double>::epsilon()){
-        return true;
-    }else{ 
-        _log(logERR) << "Option: \"" << option_name << "\" must be a value within range: <" << lower << ";" << higher << ">";
-        exit(1);
-    }
-}
-
-bool check_if_within_bounds(string option_name, int value, int lower, int higher){
-    if( value >= lower && value <= higher ){
+template <typename T>
+bool check_if_within_bounds(string option_name, T value, T lower, T higher){
+    if( value >= lower - numeric_limits<T>::epsilon() && value <= higher + numeric_limits<T>::epsilon()){
         return true;
     }else{ 
         _log(logERR) << "Option: \"" << option_name << "\" must be a value within range: <" << lower << ";" << higher << ">";
