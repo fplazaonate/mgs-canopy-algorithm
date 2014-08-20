@@ -27,7 +27,7 @@
 using namespace std;
 
 template <typename T>
-bool check_if_within_bounds(string option_name, T value, T lower, T higher){
+bool check_if_within_bounds(const string& option_name, T value, T lower, T higher){
     if( value >= lower - numeric_limits<T>::epsilon() && value <= higher + numeric_limits<T>::epsilon()){
         return true;
     }else{ 
@@ -36,7 +36,7 @@ bool check_if_within_bounds(string option_name, T value, T lower, T higher){
     }
 }
 
-bool check_if_file_is_readable(string option_name, string path){
+bool check_if_file_is_readable(const string& option_name, const string& path){
     ifstream file;
 	file.open(path.c_str(), ios::in);
 	
@@ -49,7 +49,7 @@ bool check_if_file_is_readable(string option_name, string path){
     }
 }
 
-bool check_if_file_is_writable(string option_name, string path){
+bool check_if_file_is_writable(const string& option_name, const string& path){
     ofstream file;
     file.open(path.c_str(), ios::out | ios::trunc);
 
@@ -62,7 +62,7 @@ bool check_if_file_is_writable(string option_name, string path){
     }
 }
 
-bool check_if_one_of(string option_name, string value, vector<string> valid_options){
+bool check_if_one_of(const string& option_name, const string& value, const vector<string>& valid_options){
     BOOST_FOREACH(string valid_opt, valid_options){
         if( value == valid_opt){
             return true;
