@@ -50,11 +50,11 @@ Point::Point(char* line){
     _log(logDEBUG3)<< "Point constructor, point id: \"" << id << "\""; 
 
     //Fill vector with data samples
-    std::vector<double> sample_data_vector;
+    std::vector<float> sample_data_vector;
     sample_data_vector.reserve(700);
 
     while(*line_ptr != '\0' ){
-        sample_data_vector.push_back(strtod(line_ptr,&line_ptr));
+        sample_data_vector.push_back(strtof(line_ptr,&line_ptr));
     }
 
     //Get number of samples for this point
@@ -62,7 +62,7 @@ Point::Point(char* line){
     _log(logDEBUG3)<< "Point constructor, num data samples: \"" << num_data_samples << "\""; 
 
     //Allocate and copy samples into array
-    sample_data = new double[num_data_samples];
+    sample_data = new float[num_data_samples];
     sample_data_pearson_precomputed = NULL; 
     for(size_t i = 0; i < sample_data_vector.size(); i++){
         sample_data[i] = sample_data_vector[i];
@@ -74,7 +74,7 @@ Point::Point(const Point& p){
     id = p.id;
     num_data_samples = p.num_data_samples;
 
-    sample_data = new double[num_data_samples];
+    sample_data = new float[num_data_samples];
     for(size_t i=0; i < num_data_samples;i++){
         sample_data[i] = p.sample_data[i];
     }
@@ -185,14 +185,14 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
 
     for(int i = 0; i < num_samples; i++){
 
-        std::vector<double> point_samples(points.size());
+        std::vector<float> point_samples(points.size());
 
 		for (size_t curr_point = 0; curr_point < point_samples.size(); curr_point++)
             point_samples[curr_point] = points[curr_point]->sample_data[i];
 
         std::sort(point_samples.begin(), point_samples.end());
 
-        double median = -1.0;
+        float median = -1.0;
 
         int mid = floor((point_samples.size() - 1)/2);
         if(!(point_samples.size()%2)){
@@ -200,8 +200,6 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
         } else {
             median = point_samples[mid];
         }
-
-        assert(median != -1.0);
 
         centroid->sample_data[i] = median;
     }

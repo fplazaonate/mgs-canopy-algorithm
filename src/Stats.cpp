@@ -25,7 +25,7 @@
 #include <math.h>
 #include <limits>
 
-void precompute_pearson_data(size_t sample_data_length, const double* __restrict__ sample_data, double* __restrict__ precomputed_pearson_data){
+void precompute_pearson_data(size_t sample_data_length, const float* __restrict__ sample_data, double* __restrict__ precomputed_pearson_data){
 
     //Calculate sum and average of data samples
     double sum = 0, avg = 0;

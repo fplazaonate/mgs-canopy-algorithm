@@ -29,7 +29,7 @@
 using namespace std;
 class Point {
     public:
-        double* sample_data;
+        float* sample_data;
         double* sample_data_pearson_precomputed;
         size_t num_data_samples;
 

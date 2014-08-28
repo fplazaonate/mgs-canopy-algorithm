@@ -24,6 +24,6 @@
 
 double pearsoncorr_from_precomputed(int n, const double* v1, const double* v2);
 
-void precompute_pearson_data(size_t sample_data_length, const double* sample_data, double* precomputed_pearson_data);
+void precompute_pearson_data(size_t sample_data_length, const float* sample_data, double* precomputed_pearson_data);
 
 #endif
