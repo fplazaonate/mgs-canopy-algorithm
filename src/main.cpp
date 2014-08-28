@@ -435,9 +435,11 @@ int main(int argc, char* argv[])
     int i =1;
     out_file.open(output_file.c_str(), ios::out | ios::trunc);
     BOOST_FOREACH(Canopy* c, canopies){
+		std::ostringstream cluster_name;
+		cluster_name << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i;
+
         BOOST_FOREACH(Point* p, c->neighbours){
-            out_file << output_cluster_prefix << std::setw(num_digits) << std::setfill('0') << i << "\t";
-            out_file << p->id << "\n";
+            out_file << cluster_name.str() << "\t" << p->id << "\n";
         }
         i++;
     }
