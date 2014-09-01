@@ -173,31 +173,27 @@ double get_distance_between_points(const Point* p1, const Point* p2){
 }
 
 Point* get_centroid_of_points(const std::vector<Point*>& points){
-
     assert(points.size());
 
     Point* centroid = new Point(*(points[0]));
     centroid->id = "!GENERATED!";
 
-    int num_samples = points[0]->num_data_samples;
+   	const size_t num_samples = points[0]->num_data_samples;
+	std::vector<float> point_samples(points.size());
+	const size_t mid = (point_samples.size() - 1)/2;
 
-    //_log(logDEBUG4) << "num samples: " << num_samples;
-
-    for(int i = 0; i < num_samples; i++){
-
-        std::vector<float> point_samples(points.size());
-
+    for(size_t i = 0; i < num_samples; i++){
 		for (size_t curr_point = 0; curr_point < point_samples.size(); curr_point++)
             point_samples[curr_point] = points[curr_point]->sample_data[i];
 
-        std::sort(point_samples.begin(), point_samples.end());
-
-        float median = -1.0;
-
-        int mid = floor((point_samples.size() - 1)/2);
-        if(!(point_samples.size()%2)){
-            median = (point_samples[mid] + point_samples[mid+1])/2.0; 
+        float median;
+        if(point_samples.size()%2 == 0){
+			std::nth_element(point_samples.begin(), point_samples.begin()+mid+1, point_samples.end());
+			median = point_samples[mid+1];
+			median += *std::max_element(point_samples.begin(), point_samples.begin()+mid+1);
+			median /= 2.0;
         } else {
+			std::nth_element(point_samples.begin(), point_samples.begin()+mid, point_samples.end());
             median = point_samples[mid];
         }
 
