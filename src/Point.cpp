@@ -110,7 +110,7 @@ bool Point::check_if_top_three_point_proportion_is_smaller_than(double x){
     vector<double> temp_data_samples(num_data_samples);
 	std::copy(sample_data, sample_data + num_data_samples, temp_data_samples.begin());
 
-    std::sort(temp_data_samples.begin(), temp_data_samples.end(), std::greater<double>());
+	std::nth_element(temp_data_samples.begin(), temp_data_samples.begin()+2, temp_data_samples.end(), std::greater<double>());
 
     double sum_data_samples = std::accumulate(temp_data_samples.begin(), temp_data_samples.end(), 0.0);
     double sum_top_three = std::accumulate(temp_data_samples.begin(), temp_data_samples.begin()+3, 0.0);
