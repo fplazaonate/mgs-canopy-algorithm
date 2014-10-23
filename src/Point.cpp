@@ -205,12 +205,6 @@ Point* get_centroid_of_points(const std::vector<Point*>& points){
     return centroid;
 }
 
-
-std::size_t hash_value(const Point& p){
-    boost::hash<std::string> hasher;
-    return hasher(p.id);
-}
-
 std::ostream& operator<<(std::ostream& ost, const Point& p)
 {
         ost << "============================" << std::endl;

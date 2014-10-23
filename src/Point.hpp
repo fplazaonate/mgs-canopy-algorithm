@@ -43,7 +43,6 @@ class Point {
         bool check_if_single_point_proportion_is_smaller_than(double x);
         bool check_if_top_three_point_proportion_is_smaller_than(double x);
 
-        friend std::size_t hash_value(const Point &p);
         friend std::ostream& operator<<(std::ostream& ost, const Point& ls);
 
         friend double get_distance_between_points(const Point* p1, const Point* p2);
