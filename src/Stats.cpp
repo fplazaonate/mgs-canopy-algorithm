@@ -2,6 +2,7 @@
  * Metagenomics Canopy Clustering Implementation
  *
  * Copyright (C) 2013, 2014 Piotr Dworzynski (piotr@cbs.dtu.dk), Technical University of Denmark
+ * Copyright (C) 2015 Enterome
  *
  * This file is part of Metagenomics Canopy Clustering Implementation.
  *
