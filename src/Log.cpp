@@ -19,8 +19,11 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <Log.hpp>
+#include <boost/assign/list_of.hpp> 
 
 loglevel_e Logger::log_level = logDEBUG4;
+const std::vector<std::string> Logger::valid_verbosities = 
+boost::assign::list_of("error")("progress")("warn")("info")("debug")("debug1")("debug2")("debug3");
 
 Logger::Logger() {
 }
@@ -32,3 +35,36 @@ Logger::~Logger()
     // http://www.gnu.org/s/libc/manual/html_node/Streams-and-Threads.html
     std::cerr << buffer.str();
 }
+
+
+bool Logger::set_log_level(const std::string& verbosity_option)
+{
+	if(verbosity_option == "error"){
+		Logger::log_level = logERR;
+		return true;
+	}else if(verbosity_option == "progress"){
+		Logger::log_level = logPROGRESS;
+		return true;
+	}else if(verbosity_option == "warn"){
+		Logger::log_level = logWARN;
+		return true;
+	}else if(verbosity_option == "info"){
+		Logger::log_level = logINFO;
+		return true;
+	}else if(verbosity_option == "debug"){
+		Logger::log_level = logDEBUG;
+		return true;
+	}else if(verbosity_option == "debug1"){
+		Logger::log_level = logDEBUG1;
+		return true;
+	}else if(verbosity_option == "debug2"){
+		Logger::log_level = logDEBUG2;
+		return true;
+	}else if(verbosity_option == "debug3"){
+		Logger::log_level = logDEBUG3;
+		return true;
+	}
+
+	return false;
+}
+

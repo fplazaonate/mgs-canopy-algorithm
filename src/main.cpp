@@ -44,7 +44,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
     //Set initial logging level
-	Logger::log_level = logINFO;
+	Logger::set_log_level("info");
 
     //Prepare Time Profile
     TimeProfile time_profile;
@@ -56,26 +56,8 @@ int main(int argc, char* argv[])
 	_log(logINFO) << options;
 
 
-    //
     //Set user chosen logging level
-    //
-    if(options.verbosity_option == "error"){
-		Logger::log_level = logERR;
-    }else if(options.verbosity_option == "progress"){
-		Logger::log_level = logPROGRESS;
-    }else if(options.verbosity_option == "warn"){
-		Logger::log_level = logWARN;
-    }else if(options.verbosity_option == "info"){
-		Logger::log_level = logINFO;
-    }else if(options.verbosity_option == "debug"){
-		Logger::log_level = logDEBUG;
-    }else if(options.verbosity_option == "debug1"){
-		Logger::log_level = logDEBUG1;
-    }else if(options.verbosity_option == "debug2"){
-		Logger::log_level = logDEBUG2;
-    }else if(options.verbosity_option == "debug3"){
-		Logger::log_level = logDEBUG3;
-    }
+	Logger::set_log_level(options.verbosity_option);
 
     //Set signal handler
     if(options.die_on_kill) 

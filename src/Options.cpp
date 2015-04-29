@@ -4,14 +4,11 @@
 #include <omp.h>
 #include <boost/foreach.hpp>
 #include <boost/program_options.hpp>
-#include <boost/assign/list_of.hpp> 
 namespace po = boost::program_options;
 #include <boost/algorithm/string/join.hpp>
 #include <Log.hpp>
 
 
-const std::vector<std::string> Options::valid_verbosities = 
-boost::assign::list_of("error")("progress")("warn")("info")("debug")("debug1")("debug2")("debug3");
 
 Options Options::parse(int argc, char* argv[])
 {
@@ -85,7 +82,7 @@ Options Options::parse(int argc, char* argv[])
 		check_if_file_is_writable("points_filtered_out_top_three_prop_file_path", options.points_filtered_out_top_three_prop_file_path);
 	if (options.points_filtered_out_at_least_non_zero_file_path != "")
 		check_if_file_is_writable("points_filtered_out_at_least_non_zero_file_path", options.points_filtered_out_at_least_non_zero_file_path);
-	check_if_one_of("verbosity_option", options.verbosity_option, valid_verbosities);
+	check_if_one_of("verbosity_option", options.verbosity_option, Logger::valid_verbosities);
 	check_if_within_bounds("num_threads", options.num_threads,1,omp_get_max_threads());
 	check_if_within_bounds("max_canopy_dist", options.max_canopy_dist,0.0,1.0);
 	check_if_within_bounds("max_close_dist", options.max_close_dist,0.0,1.0);

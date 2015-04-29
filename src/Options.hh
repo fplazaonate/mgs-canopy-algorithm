@@ -2,8 +2,8 @@
 #define OPTIONS_HH
 
 #include <string>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 struct Options
 {
@@ -30,8 +30,6 @@ struct Options
     bool print_time_statistics;
     bool die_on_kill;
     int max_num_canopy_walks;
-
-	static const std::vector<std::string> valid_verbosities;
 
 	static Options parse(int argc, char* argv[]);
 	static bool check_if_file_is_readable(const std::string& option_name, const std::string& path);

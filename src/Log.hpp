@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 enum loglevel_e
     {logERR, logPROGRESS, logWARN, logINFO, logDEBUG, logDEBUG1, logDEBUG2, logDEBUG3, logDEBUG4};
@@ -30,17 +31,21 @@ enum loglevel_e
 class Logger
 {
 public:
+	static const std::vector<std::string> valid_verbosities;
+	static loglevel_e log_level;
+
     Logger();
+    ~Logger();
 
     template <typename T> Logger& operator<<(T const & value)
     {
         buffer << value;
         return *this;
     }
+	
+	static bool set_log_level(const std::string& verbosity_option);
 
-    ~Logger();
 
-	static loglevel_e log_level;
 
 private:
     std::ostringstream buffer;
