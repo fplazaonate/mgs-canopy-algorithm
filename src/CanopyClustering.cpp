@@ -195,8 +195,9 @@ std::vector<Canopy*> CanopyClusteringAlg::multi_core_run_clustering_on(vector<Po
 
     _log(logPROGRESS) << "";
     _log(logPROGRESS) << "############ Creating Canopies ############";
-
     boost::unordered_set<Point*> marked_points;//Points that should not be investigated as origins
+	marked_points.rehash(points.size());
+
     vector<unsigned int> canopy_size_per_origin_num;//Contains size of the canopy created from origin by it's number, so first origin gave canopy of size 5, second origin gave canopy of size 8 and so on
     int last_progress_displayed_at_num_points = 0;
 
