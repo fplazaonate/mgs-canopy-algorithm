@@ -273,7 +273,7 @@ int main(int argc, char* argv[])
 
     sort(canopies.begin(), canopies.end(), compare_canopy_ptrs_by_canopy_size);
 
-    int num_digits = ceil(log10(canopies.size()));
+    int num_digits = ceil(log10(canopies.size()+1));
     cout << std::setfill('0');
 
 
